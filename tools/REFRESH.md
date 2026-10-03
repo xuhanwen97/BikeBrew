@@ -7,6 +7,7 @@ from the control page.
 | Thing | Where |
 |---|---|
 | Drinks sheet | Google Drive file `1RxgUCudXWTEWxoq7LoU9xiT1dIJfdhRePCnjvECsto0` |
+| Rider Names sheet (form name → display name) | Google Drive file `10ar6o290JM09kW4Q1JN7Huq1y5BuSH5xOySc84neheQ` |
 | Public leaderboard | https://xuhanwen97.github.io/BikeBrew/ (GitHub Pages, this branch) |
 | claude.ai leaderboard | https://claude.ai/artifact/1A8iqA15we3wFGWQZywv1M |
 | Control page (private) | https://claude.ai/artifact/NZxmMPfr5Bk7k5tgzqGV23 |
@@ -16,10 +17,12 @@ from the control page.
 
 1. **Repo.** Work in `/home/user/BikeBrew`. If it's missing (fresh container), clone
    `https://github.com/xuhanwen97/BikeBrew` on the branch above. `git pull` first.
-2. **Read the sheet** with the Google Drive `read_file_content` tool on the file id above.
-3. **Save it.** Write the `fileContent` text to `<scratchpad>/sheet.txt`. Only the
-   `Table Range` line and the markdown table matter; copy the table rows exactly.
-4. **Bake.** `python3 tools/update_data.py <scratchpad>/sheet.txt`
+2. **Read both sheets** with the Google Drive `read_file_content` tool: the drinks sheet
+   and the Rider Names sheet.
+3. **Save them.** Write each `fileContent` to `<scratchpad>/sheet.txt` and
+   `<scratchpad>/names.txt`. Only the `Table Range` line and the markdown table matter;
+   copy the table rows exactly.
+4. **Bake.** `python3 tools/update_data.py <scratchpad>/sheet.txt --names <scratchpad>/names.txt`
    - Prints `UNCHANGED` (exit 3): nothing new. Skip to step 7 with the summary
      "No new drinks (N responses)".
    - Prints `WARNING ... only N came through`: Drive truncated the sheet. Don't publish
@@ -35,4 +38,6 @@ from the control page.
    `set` collection `control`, doc `status`,
    data `{"at": <now, epoch ms>, "summary": "<one line, e.g. 3 new drinks · 39 responses through 2:51 PM>"}`.
    Pass the doc's current `version` as `if_version` (read it first with `get`).
-8. **Reply** in one short line: what changed (new drinks, jersey changes, rows still not counted).
+8. **Reply** in one short line: what changed (new drinks, jersey changes, rows still not counted,
+   form names missing from the Rider Names sheet). Claude can't edit the names sheet
+   (no Sheets editor connector), so new form names are flagged on the page for the organiser to add.
