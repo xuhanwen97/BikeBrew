@@ -1,3 +1,8 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Bike &amp; Brews</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -41,7 +46,7 @@
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
 .wrap { max-width: 1080px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 56px; display: grid; gap: 28px; }
 
 /* Masthead */
@@ -139,7 +144,8 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
   td.au .gap { display: block; font-size: 13px; font-weight: 500; }
 }
 </style>
-
+</head>
+<body>
 <div class="wrap">
   <header class="mast">
     <div>
@@ -599,3 +605,5 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
   }
 })();
 </script>
+</body>
+</html>

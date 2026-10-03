@@ -2,7 +2,8 @@
 
 A Tour de France–style leaderboard for a drinking competition. The prizes are a bike and a brewery. Drinks get logged through a Google Form, and the page reads the form's response sheet.
 
-Live page: https://claude.ai/artifact/1A8iqA15we3wFGWQZywv1M (private until shared from the page's Share menu)
+Public page (no login): https://xuhanwen97.github.io/BikeBrew/ — served by GitHub Pages from this branch.
+Also on claude.ai: https://claude.ai/artifact/1A8iqA15we3wFGWQZywv1M (viewers need a Claude login)
 
 ## The jerseys
 
@@ -22,9 +23,10 @@ Live page: https://claude.ai/artifact/1A8iqA15we3wFGWQZywv1M (private until shar
 Google Form ──► Google Sheet (responses) ──► Claude reads it ──► tools/update_data.py ──► index.html ──► republish
 ```
 
-- **Single file:** `index.html` holds the page, styles, logic and data, with no build step.
+- **Single file:** `index.html` is a complete web page (styles, logic and data inline, no build step), served as-is by GitHub Pages. `.nojekyll` makes Pages serve it untouched.
+- `tools/artifact_copy.py` writes the body-only copy that gets published to claude.ai.
 - **Data is hard-coded** in the `<script type="application/json" id="bb-data">` block: the sheet's rows as JSON plus when they were pulled. The page needs no Google access, so it works for anyone with the link, on any device.
-- **Refreshing:** ask Claude to refresh. It reads the sheet through Google Drive, saves the text to a file, runs `python3 tools/update_data.py <file>` to bake the rows into `index.html`, republishes the page and commits.
+- **Refreshing:** ask Claude to refresh. It reads the sheet through Google Drive, saves the text to a file, runs `python3 tools/update_data.py <file>` to bake the rows into `index.html`, commits and pushes (GitHub Pages redeploys in about a minute) and republishes the claude.ai copy.
 - `update_data.py` accepts Drive's markdown-table export or a CSV/TSV download of the sheet, and warns if fewer rows came through than the sheet holds.
 - The page scores the rows in the browser and lists rows it couldn't count (missing name, unreadable volume or ABV) so they can be fixed in the sheet.
 
@@ -46,7 +48,7 @@ Recommended questions. Columns are matched by header name, so wording can vary:
 2. **Scoring engine:** parse CSV / TSV / table text → per-rider totals → four jersey rankings with Tour-style gaps. ✅
 3. **Themed UI:** race-poster masthead, coaster-wheel bike, jersey cards with leaders and top 5, GC table with jersey badges. ✅
 4. **Refresh:** ask Claude to refresh; it bakes the latest sheet into the page and republishes. ✅
-5. **Hosting:** published as a claude.ai artifact. ✅ Share it from the page's Share menu.
+5. **Hosting:** GitHub Pages for the public link (Settings → Pages → Deploy from a branch → `claude/bike-brews-leaderboard-u6ptk2`, `/ (root)`), plus a claude.ai artifact. ✅
 6. **Next ideas:**
    - Stages: group by day from the form timestamp, with stage winners.
    - Minimum-drinks threshold for green/white so one taster can't win the jersey.
