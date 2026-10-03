@@ -40,6 +40,7 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
 .wrap { max-width: 1080px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 56px; display: grid; gap: 28px; }
 
@@ -133,14 +134,46 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
 
 .foot { color: var(--muted); font-size: 13px; display: grid; gap: 6px; max-width: 78ch; }
 .foot strong { color: var(--ink); }
+.sub-m { display: none; }
+@media (max-width: 560px) {
+  body { font-size: 15px; }
+  .wrap { padding-block: 14px 40px; gap: 20px; }
+  .mast { grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 8px 12px; }
+  .mast p { grid-column: 1 / -1; margin-top: 4px; font-size: 14px; }
+  .mast > div { display: contents; }
+  .mast .titles { grid-column: 1; }
+  .bike { width: 92px; justify-self: end; grid-column: 2; grid-row: 1; margin-top: 6px; }
+  .bar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
+  .bar .tap { grid-column: 1 / -1; justify-content: center; min-height: 48px; font-size: 16px; }
+  .bar .status { grid-column: 1 / -1; grid-row: 3; font-size: 13px; }
+  .bar .ghost { justify-self: end; min-height: 36px; }
+  .connect form .tap, .connect form .ghost { flex: 1 1 auto; justify-content: center; min-height: 44px; }
+  .jerseys { gap: 12px; }
+  .jersey header { grid-template-columns: 44px minmax(0, 1fr); gap: 12px; padding: 14px 14px 10px; }
+  .jersey header svg { width: 44px; height: 44px; }
+  .jersey ol { padding: 2px 14px 12px; }
+  .jersey li { grid-template-columns: 22px minmax(0, 1fr) auto; gap: 8px; padding: 7px 0; }
+  .jersey li .val { font-size: 15px; text-align: right; }
+  .jersey li .gap { display: block; margin-left: 0; font-size: 12px; }
+  .gc h2 { font-size: 24px; }
+  table { min-width: 0; }
+  th, td { padding: 9px 10px; }
+  th:first-child, td:first-child { width: 36px; padding-inline: 6px 4px; }
+  th:nth-child(n+4), td:nth-child(n+4) { display: none; }
+  td:nth-child(2) { overflow-wrap: anywhere; }
+  .sub-m { display: block; color: var(--muted); font-family: var(--f-data); font-size: 13px; margin-top: 1px; }
+  td.au .gap { display: block; font-size: 13px; font-weight: 500; }
+}
 @media (prefers-reduced-motion: reduce) { .tap.spin svg { animation: none; } }
 </style>
 
 <div class="wrap">
   <header class="mast">
     <div>
-      <div class="kicker">Le Tour de Brew · Classement général</div>
-      <h1>Bike <span class="amp">&amp;</span> Brews</h1>
+      <div class="titles">
+        <div class="kicker">Le Tour de Brew · Classement général</div>
+        <h1>Bike <span class="amp">&amp;</span> Brews</h1>
+      </div>
       <p>Four jerseys, one bike, one brewery. Every pour logged on the form counts toward the standings, measured in standard drinks (AU).</p>
     </div>
     <svg class="bike" viewBox="0 0 220 120" role="img" aria-label="A bicycle whose wheels are beer coasters">
@@ -366,9 +399,9 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
       const dots = [["yellow","y","Yellow jersey"],["green","g","Green jersey"],["polka","p","Polka dot jersey"],["white","w","White jersey"]]
         .filter(([k]) => leaders[k] === r.name).map(([, c, t]) => `<span class="dot ${c}" title="${t}" aria-label="${t}"></span>`).join("");
       const gap = i === 0 ? "" : ` <span class="gap">+${fmt(gc[0].au - r.au, 1)}</span>`;
-      return `<tr><td class="pos">${i + 1}</td><td>${esc(r.name)}${dots ? `<span class="dots">${dots}</span>` : ""}</td>
+      return `<tr><td class="pos">${i + 1}</td><td>${esc(r.name)}${dots ? `<span class="dots">${dots}</span>` : ""}<span class="sub-m">${r.drinks} drink${r.drinks === 1 ? "" : "s"} · ${fmtVol(r.ml)} · ${isFinite(r.avgAbv) ? fmt(r.avgAbv, 1) + "%" : "–"}</span></td>
         <td class="au">${fmt(r.au, 1)}${gap}</td><td>${r.drinks}</td><td>${fmtVol(r.ml)}</td><td>${isFinite(r.avgAbv) ? fmt(r.avgAbv, 2) + "%" : "–"}</td></tr>`;
-    }).join("") : `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">No drinks logged yet. The first pour takes yellow.</td></tr>`;
+    }).join("") : `<tr><td colspan="6" style="display:table-cell;text-align:center;color:var(--muted);padding:24px">No drinks logged yet. The first pour takes yellow.</td></tr>`;
   }
 
   function showIssues(notes) {
