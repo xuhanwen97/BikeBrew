@@ -342,7 +342,7 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
 
 <script type="application/json" id="bb-data">
 {
-"updatedAt": 1791058383769,
+"updatedAt": 1791058692613,
 "rows": [
 [
 "Timestamp",
@@ -799,6 +799,78 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
 "20",
 "5.5",
 "Saddle sores (ow)"
+],
+[
+"10/3/2026 15:56:02",
+"Sucher",
+"4",
+"20",
+"5",
+"Beer"
+],
+[
+"10/3/2026 15:59:31",
+"Sherry",
+"4",
+"6",
+"5.5",
+"Legs gone zub zub"
+],
+[
+"10/3/2026 16:01:32",
+"Kiersten",
+"4",
+"14",
+"7",
+"Saddle sores (ow)"
+],
+[
+"10/3/2026 16:03:13",
+"Kelsey",
+"4",
+"14",
+"7",
+"Option 6"
+],
+[
+"10/3/2026 16:03:58",
+"Viktor",
+"4",
+"14",
+"5",
+"Beer"
+],
+[
+"10/3/2026 16:05:55",
+"",
+"4",
+"6",
+"6.6",
+"Yes"
+],
+[
+"10/3/2026 16:11:24",
+"Ari",
+"4",
+"8",
+"5.9",
+"Ready to roll"
+],
+[
+"10/3/2026 16:14:53",
+"James",
+"3",
+"12",
+"5",
+"Ready to roll"
+],
+[
+"10/3/2026 16:16:09",
+"James",
+"4",
+"12",
+"6.6",
+"Beer"
 ]
 ],
 "names": [
@@ -850,7 +922,7 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
 [
 "Teags",
 "Teags",
-"Giraffe"
+"Kangaroo"
 ],
 [
 "Sherry",
@@ -1038,6 +1110,18 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
   }
 
   const qualified = (r) => r.drinks >= MIN_DRINKS;
+  /* AVATARS:BEGIN (copied from avatars/avatars.js by tools/sync_avatars.py; edit that file, not this block) */
+  // Bike & Brews avatar library: cartoon animals (and Pac-Man) in cycling kit, raising a beer.
+  //
+  // This file is the single source of truth. To add an animal: add an entry to ANIMALS (and any
+  // spellings to ANIMAL_ALIASES), run `node tools/render_avatars.js` to save its SVG and refresh the
+  // gallery, then `python3 tools/sync_avatars.py` to copy this file into index.html.
+  //
+  // Use:  BikeBrewsAvatars.draw({ name, forms: [] }, place, kind)  -> SVG string
+  //       place 0/1/2 = podium medal and kit (0 wears yellow); -1 = no medal.
+  //       kind = a key of ANIMALS, or "pacman".
+  const BikeBrewsAvatars = (() => {
+  const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   // Cartoon animal avatars. The animal comes from the Rider Names sheet's Animal column;
   // riders without one get an animal picked from their display name.
   function hashName(str) {
@@ -1070,6 +1154,7 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
     raccoon: { base: "#8f969c", light: "#eef0f2", dark: "#2b2f36", inner: "#2b2f36", ear: "pointy", muzzle: "fox", extras: ["mask"] },
     sheep:   { base: "#5a5048", light: "#f5f1ea", dark: "#2a241f", inner: "#f7b8c4", ear: "side", muzzle: "sheep", extras: ["wool"] },
     unicorn: { base: "#ffffff", light: "#ffe3f1", dark: "#7a4fb5", inner: "#f7b8c4", ear: "pointy", muzzle: "horse", extras: ["horn", "unimane"] },
+    kangaroo: { base: "#c68642", light: "#ecc89a", dark: "#6e4423", inner: "#ecc89a", ear: "tall", muzzle: "dog", extras: ["joey"] },
     giraffe: { base: "#f2c14e", light: "#f8dc96", dark: "#9a5a26", inner: "#9a5a26", ear: "side", muzzle: "horse", extras: ["giraffespots", "ossicones"] },
     horse:   { base: "#9c6a3f", light: "#d8b48d", dark: "#3b2416", inner: "#3b2416", ear: "pointy", muzzle: "horse", extras: ["horsemane"] },
   };
@@ -1077,7 +1162,7 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
     kitty: "cat", kitten: "cat", puppy: "dog", pup: "dog", doggo: "dog", retriever: "dog", lab: "dog", labrador: "dog", corgi: "dog", pug: "dog",
     bunny: "rabbit", hare: "rabbit", grizzly: "bear", polar: "bear", piglet: "pig", hog: "pig", boar: "pig", bull: "cow", cattle: "cow",
     ape: "monkey", chimp: "monkey", gorilla: "monkey", toad: "frog", lamb: "sheep", ram: "sheep", pony: "horse", mice: "mouse", rat: "mouse",
-    giraffes: "giraffe", giraf: "giraffe", kitsune: "fox", husky: "wolf", trash: "raccoon", goose: "duck", chick: "duck",
+    roo: "kangaroo", wallaby: "kangaroo", joey: "kangaroo", giraffes: "giraffe", giraf: "giraffe", kitsune: "fox", husky: "wolf", trash: "raccoon", goose: "duck", chick: "duck",
   };
   // "Red Panda" -> panda, "Golden Retriever" -> dog, "Cats" -> cat. Unknown -> null.
   function resolveAnimal(text) {
@@ -1099,14 +1184,14 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
   function pacmanSvg(r, place) {
     const o = 'stroke="#1d1a16" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"';
     const kit = place === 0 ? "#f2c200" : KIT[hashName(r.name + "kit") % KIT.length];
-    return `<svg class="avatar" viewBox="0 0 130 132" role="img" aria-label="Pac-Man for ${esc(r.name)}">
+    return `<svg class="avatar" viewBox="0 0 130 132" role="img" xmlns="http://www.w3.org/2000/svg" aria-label="Pac-Man for ${esc(r.name)}">
       <path d="M16 132 C16 102 36 94 60 94 C84 94 104 102 104 132 Z" fill="${kit}" ${o}/>
       <path d="M52 95 L60 108 L68 95" fill="none" ${o}/><path d="M60 108 V132" ${o}/>
       <path d="M42 112 L36 132 M78 112 L84 132" stroke="#fff" stroke-width="3" opacity=".55"/>
       <path d="M60 58 L91 41 A35 35 0 1 0 91 75 Z" fill="#ffd400" ${o}/>
       <circle cx="58" cy="38" r="4.6" fill="#1d1a16"/>
       <circle cx="104" cy="58" r="4.5" fill="#ffb3a8" ${o}/><circle cx="121" cy="58" r="4.5" fill="#ffb3a8" ${o}/>
-      ${MEDAL_SVG(place, o)}
+      ${place >= 0 ? MEDAL_SVG(place, o) : ""}
     </svg>`;
   }
   function avatarSvg(r, place, kind) {
@@ -1120,6 +1205,7 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
       pointy: `<path d="M35 46 L31 16 L55 34 Z" fill="${earFill}" ${o}/><path d="M85 46 L89 16 L65 34 Z" fill="${earFill}" ${o}/><path d="M38 40 L36 24 L49 34 Z" fill="${a.inner}"/><path d="M82 40 L84 24 L71 34 Z" fill="${a.inner}"/>`,
       round: `<circle cx="38" cy="36" r="11" fill="${earFill}" ${o}/><circle cx="82" cy="36" r="11" fill="${earFill}" ${o}/><circle cx="38" cy="36" r="5.5" fill="${a.inner}"/><circle cx="82" cy="36" r="5.5" fill="${a.inner}"/>`,
       fluffy: `<circle cx="34" cy="40" r="15" fill="${a.base}" ${o}/><circle cx="86" cy="40" r="15" fill="${a.base}" ${o}/><circle cx="34" cy="41" r="8" fill="${a.inner}"/><circle cx="86" cy="41" r="8" fill="${a.inner}"/>`,
+      tall: `<path d="M40 44 C30 30 32 8 40 6 C48 8 50 30 48 40 Z" fill="${a.base}" ${o}/><path d="M80 44 C90 30 88 8 80 6 C72 8 70 30 72 40 Z" fill="${a.base}" ${o}/><path d="M41 36 C36 26 37 14 40 12 C44 14 45 26 45 34 Z" fill="${a.inner}"/><path d="M79 36 C84 26 83 14 80 12 C76 14 75 26 75 34 Z" fill="${a.inner}"/>`,
       big: `<circle cx="34" cy="34" r="15" fill="${a.base}" ${o}/><circle cx="86" cy="34" r="15" fill="${a.base}" ${o}/><circle cx="34" cy="34" r="9" fill="${a.inner}"/><circle cx="86" cy="34" r="9" fill="${a.inner}"/>`,
       long: `<ellipse cx="48" cy="14" rx="8" ry="22" fill="${a.base}" ${o}/><ellipse cx="72" cy="14" rx="8" ry="22" fill="${a.base}" ${o}/><ellipse cx="48" cy="16" rx="3.5" ry="15" fill="${a.inner}"/><ellipse cx="72" cy="16" rx="3.5" ry="15" fill="${a.inner}"/>`,
       floppy: "",
@@ -1173,18 +1259,26 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
       + (x("ossicones") ? `<path d="M50 34 L48 16 M70 34 L72 16" stroke="${a.base}" stroke-width="6" stroke-linecap="round"/><path d="M50 34 L48 16 M70 34 L72 16" stroke="#1d1a16" stroke-width="2.4" stroke-linecap="round" fill="none" opacity="0"/><circle cx="48" cy="15" r="5" fill="${a.dark}" ${o}/><circle cx="72" cy="15" r="5" fill="${a.dark}" ${o}/>` : "")
       + (x("horn") ? `<path d="M56 32 L60 6 L64 32 Z" fill="#ffd76a" ${o}/><path d="M57 26 L63 24 M58 19 L62 17" stroke="#c98d3e" stroke-width="1.6"/>` : "")
       + (x("tuft") ? `<path d="M56 34 C54 26 60 24 60 32 C62 24 68 26 64 34 Z" fill="${a.base}" ${o}/>` : "");
+    const joey = x("joey") ? `<path d="M64 132 V116 C64 110 92 110 92 116 V132 Z" fill="${a.light}" ${o}/><circle cx="78" cy="110" r="8" fill="${a.base}" ${o}/><path d="M72 104 L70 94 L76 102 Z M84 104 L86 94 L80 102 Z" fill="${a.base}" ${o}/><circle cx="75.5" cy="109" r="1.6" fill="#1d1a16"/><circle cx="80.5" cy="109" r="1.6" fill="#1d1a16"/><ellipse cx="78" cy="113" rx="2" ry="1.4" fill="#1d1a16"/>` : "";
     const whiskers = x("whiskers") ? `<path d="M44 68 L32 66 M44 72 L32 74 M76 68 L88 66 M76 72 L88 74" stroke="#1d1a16" stroke-width="1.4" stroke-linecap="round"/>` : "";
     const cheeks = ["frog", "owl", "penguin", "duck"].includes(a.muzzle) ? "" : `<circle cx="42" cy="68" r="4" fill="#ff7b7b" opacity=".35"/><circle cx="78" cy="68" r="4" fill="#ff7b7b" opacity=".35"/>`;
-    return `<svg class="avatar" viewBox="0 0 130 132" role="img" aria-label="Cartoon ${esc(kind)} for ${esc(r.name)}">
+    return `<svg class="avatar" viewBox="0 0 130 132" role="img" xmlns="http://www.w3.org/2000/svg" aria-label="Cartoon ${esc(kind)} for ${esc(r.name)}">
       <path d="M16 132 C16 102 36 94 60 94 C84 94 104 102 104 132 Z" fill="${kit}" ${o}/>
       <path d="M52 95 L60 108 L68 95" fill="none" ${o}/><path d="M60 108 V132" ${o}/>
       <path d="M42 112 L36 132 M78 112 L84 132" stroke="#fff" stroke-width="3" opacity=".55"/>
       <rect x="52" y="80" width="16" height="16" fill="${a.base}" ${o}/>
-      ${behind}${ears}${head}${floppy}${marks}${top}${cheeks}${eyes}${muzzle}${whiskers}
-      <path d="M44 100 L48 116 L52 100" fill="none" stroke="#1d1a16" stroke-width="2"/><circle cx="48" cy="120" r="7" fill="${MEDAL[place]}" ${o}/><text x="48" y="123.5" text-anchor="middle" font-size="9" font-weight="700" fill="#1d1a16" font-family="Barlow Condensed, sans-serif">${place + 1}</text>
+      ${behind}${ears}${head}${floppy}${marks}${top}${cheeks}${eyes}${muzzle}${whiskers}${joey}
+      ${place >= 0 ? MEDAL_SVG(place, o) : ""}
       <g transform="rotate(-12 108 96)"><path d="M118 88 C126 88 126 104 118 104" fill="none" stroke="#1d1a16" stroke-width="3"/><rect x="96" y="82" width="22" height="30" rx="3" fill="#e9a23b" ${o}/><path d="M101 88 V106 M107 88 V106 M113 88 V106" stroke="#fff" stroke-width="1.6" opacity=".45"/><path d="M94 84 C94 76 100 74 104 77 C106 72 114 72 116 77 C122 75 124 82 120 85 Z" fill="#fffaf0" ${o}/></g>
     </svg>`;
   }
+  return { ANIMALS, ANIMAL_ALIASES, resolveAnimal, animalFor, draw: avatarSvg, hashName };
+  })();
+  if (typeof module !== "undefined") module.exports = BikeBrewsAvatars;
+  /* AVATARS:END */
+  const { resolveAnimal, animalFor } = BikeBrewsAvatars;
+  const avatarSvg = BikeBrewsAvatars.draw;
+
   function renderPodium(list) {
     const top = list.filter(qualified).sort((a, b) => b.au - a.au).slice(0, 3);
     if (!top.length) { $("podium").innerHTML = `<p class="sub">No one has ${MIN_DRINKS} counted drinks yet.</p>`; return; }
