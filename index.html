@@ -72,6 +72,7 @@ body { background: var(--bg); color: var(--ink); font-family: var(--f-body); fon
 .pill { display: inline-block; font-family: var(--f-data); font-weight: 700; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; }
 .pill.demo { background: var(--foam); color: var(--amber); border: 1px dashed var(--amber); }
 .pill.live { background: var(--green); color: #fff; }
+.pill.snap { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
 .pill.err { background: var(--polka); color: #fff; }
 
 /* Connect panel */
@@ -198,8 +199,9 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/><path d="M12 3v6.5M12 14.5V21M3 12h6.5M14.5 12H21M5.6 5.6l4.8 4.8M13.6 13.6l4.8 4.8M18.4 5.6l-4.8 4.8M10.4 13.6l-4.8 4.8"/></svg>
       Refresh leaderboard
     </button>
-    <span id="mode" class="pill demo">Example data</span>
-    <span id="status" class="status">Showing example riders until a sheet is connected.</span>
+    <span id="mode" class="pill snap">Latest snapshot</span>
+    <span id="status" class="status">Loading the latest standings…</span>
+    <button class="ghost" id="allow" type="button" hidden>Allow Google Drive</button>
     <button class="ghost" id="toggleConnect" type="button">Sheet settings</button>
   </div>
 
@@ -242,7 +244,7 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
   const ETHANOL = 0.789; // g/ml; AU standard drink = 10 g
   const SHEET_DOC = "config/sheet";
   const $ = (id) => document.getElementById(id);
-  const state = { sheetId: null, rows: null, live: false };
+  const state = { sheetId: null };
 
   // ---------- Example data (shown until a sheet is connected) ----------
   const EXAMPLE = [
@@ -412,7 +414,7 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
   function setMode(kind, text) {
     const m = $("mode");
     m.className = "pill " + kind;
-    m.textContent = kind === "live" ? "Live sheet" : kind === "err" ? "Can't read sheet" : "Example data";
+    m.textContent = { live: "Live sheet", snap: "Latest snapshot", err: "Can't read sheet", demo: "Example data" }[kind];
     $("status").textContent = text;
   }
 
@@ -436,75 +438,114 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
   }
   async function readViaDrive(id) {
     const mcp = window.claude ? await window.claude.use("mcp") : null;
-    if (!mcp) return null;
+    if (!mcp) { const e = new Error("no_drive"); e.code = "no_drive"; throw e; }
     const res = await mcp.callTool("Google Drive", "read_file_content", { fileId: id }, { cache: { refresh: true } });
     let text = textFromPayload(res.payload);
     if (!text) text = (res.content || []).filter(b => b.type === "text").map(b => b.text).join("\n");
     return text;
   }
+  // Outside claude.ai (e.g. GitHub Pages) the public CSV export works for link-shared sheets.
   async function readViaPublicCsv(id) {
     const r = await fetch(`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv`, { cache: "no-store" });
     if (!r.ok) throw new Error("Sheet returned " + r.status);
     return r.text();
   }
+  const inClaude = () => !!(window.claude && typeof window.claude.use === "function");
 
   const MCP_HELP = {
+    no_drive: "Live refresh needs Google Drive, which isn't available in this view. Open the page in claude.ai while signed in.",
     server_not_connected: "Google Drive isn't connected for you. Connect it in claude.ai Settings → Connectors, then refresh.",
     needs_reauth: "Your Google Drive connection expired. Reconnect it in claude.ai Settings → Connectors.",
-    not_granted: "This page wasn't allowed to use Google Drive. Use the artifact's Permissions menu to allow it.",
-    consent_required: "Allow Google Drive access for this page, then refresh.",
-    tool_error: "Google Drive couldn't open that sheet. Check the link and that you have access to it.",
+    not_granted: "This page isn't allowed to use your Google Drive yet.",
+    consent_required: "This page isn't allowed to use your Google Drive yet.",
+    tool_error: "Google Drive couldn't open the sheet. Ask the organiser to share it with you.",
     rate_limited: "Too many refreshes. Wait a minute and try again.",
   };
+  const NEEDS_ALLOW = ["not_granted", "consent_required"];
+
+  // Score + render one copy of the sheet text. `when` is the time it was read.
+  function show(text, when, source) {
+    const { list, skipped, stop } = score(parseTable(text));
+    render(list);
+    const t = new Date(when).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    const drinks = list.reduce((s, r) => s + r.drinks, 0);
+    const what = `${isFinite(stop) ? `after stop ${stop} · ` : ""}${drinks} drinks from ${list.length} riders`;
+    setMode(source === "live" ? "live" : "snap", (source === "live" ? `Updated ${t} · ` : `Standings as of ${t} · `) + what);
+    // Drive's export states the sheet's range; warn if we got fewer rows than it holds.
+    const range = text.match(/Table Range:\s*[A-Z]+(\d+):[A-Z]+(\d+)/);
+    const notes = skipped.map(esc);
+    if (range) {
+      const expected = +range[2] - +range[1];
+      const seen = drinks + skipped.length;
+      if (seen < expected) notes.unshift(`Only ${seen} of ${expected} responses came through from Google Drive, so the standings may be missing the newest drinks.`);
+    }
+    showIssues(notes);
+  }
+
+  // ---------- Shared state (db): sheet setting + latest snapshot ----------
+  const DEFAULT_SHEET = "1RxgUCudXWTEWxoq7LoU9xiT1dIJfdhRePCnjvECsto0";
+  const SNAP_DOC = "standings/latest";
+  let db = null, snapshot = null;
+  const dbReady = (async () => {
+    if (!inClaude()) return null;
+    db = await window.claude.use("db");
+    return db;
+  })();
+  const local = {
+    get() { try { return localStorage.getItem("bb.sheet"); } catch { return null; } },
+    set(v) { try { localStorage.setItem("bb.sheet", v); } catch {} },
+  };
+  async function saveSheet(id) {
+    state.sheetId = id;
+    local.set(id || "demo");
+    if (!db) return false;
+    try { await db.doc(SHEET_DOC).set({ sheetId: id || "" }); return true; } catch { return false; }
+  }
+  async function saveSnapshot(text) {
+    if (!db) return;
+    try { await db.doc(SNAP_DOC).set({ sheetId: state.sheetId, text, updatedAt: Date.now() }); } catch {}
+  }
+
+  function showDemo() {
+    showIssues([]); render(score(EXAMPLE).list);
+    setMode("demo", "Showing example riders. Open Sheet settings to connect the drinks sheet.");
+  }
 
   async function refresh() {
-    if (!state.sheetId) { showIssues([]); state.rows = EXAMPLE; render(score(EXAMPLE).list); setMode("demo", "Showing example riders until a sheet is connected."); return; }
+    $("allow").hidden = true;
+    if (!state.sheetId) return showDemo();
     const btn = $("refresh");
     btn.disabled = true; btn.classList.add("spin");
     $("status").textContent = "Pouring fresh standings…";
     try {
-      let text = null;
-      try { text = await readViaDrive(state.sheetId); }
-      catch (e) { if (e && e.code && !["server_not_found", "capability_disabled"].includes(e.code)) throw e; }
-      if (text == null) text = await readViaPublicCsv(state.sheetId);
-      const { list, skipped, stop } = score(parseTable(text));
-      render(list);
-      const t = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-      const drinks = list.reduce((s, r) => s + r.drinks, 0);
-      setMode("live", `Updated ${t} · ${isFinite(stop) ? `after stop ${stop} · ` : ""}${drinks} drinks from ${list.length} riders`);
-      // Drive's export states the sheet's range; warn if we got fewer rows than it holds.
-      const range = text.match(/Table Range:\s*[A-Z]+(\d+):[A-Z]+(\d+)/);
-      const notes = skipped.map(esc);
-      if (range) {
-        const expected = +range[2] - +range[1];
-        const seen = drinks + skipped.length;
-        if (seen < expected) notes.unshift(`Only ${seen} of ${expected} responses came through from Google Drive, so the standings may be missing the newest drinks.`);
-      }
-      showIssues(notes);
+      const text = inClaude() ? await readViaDrive(state.sheetId) : await readViaPublicCsv(state.sheetId);
+      show(text, Date.now(), "live");
+      snapshot = { text, updatedAt: Date.now(), sheetId: state.sheetId };
+      saveSnapshot(text);
     } catch (e) {
       const msg = (e && MCP_HELP[e.code]) || (e && e.message) || "Couldn't read the sheet.";
-      setMode("err", msg);
-      showIssues([]);
+      if (e && NEEDS_ALLOW.includes(e.code)) $("allow").hidden = false;
+      if (snapshot && snapshot.sheetId === state.sheetId) {
+        show(snapshot.text, snapshot.updatedAt, "snap");
+        $("status").textContent += ` · Live refresh failed: ${msg}`;
+      } else {
+        setMode("err", msg);
+      }
     } finally {
       btn.disabled = false; btn.classList.remove("spin");
     }
   }
 
-  // ---------- Shared sheet setting (db), with a per-browser fallback ----------
-  let dbRef = null;
-  const local = {
-    get() { try { return localStorage.getItem("bb.sheet"); } catch { return null; } },
-    set(v) { try { v ? localStorage.setItem("bb.sheet", v) : localStorage.removeItem("bb.sheet"); } catch {} },
-  };
-  async function saveSheet(id) {
-    state.sheetId = id;
-    local.set(id);
-    let shared = false;
-    if (dbRef) { try { await dbRef.set({ sheetId: id || "" }); shared = true; } catch {} }
-    return shared;
-  }
-
   $("refresh").addEventListener("click", refresh);
+  $("allow").addEventListener("click", async () => {
+    try {
+      const perms = await window.claude.use("permissions");
+      const st = perms ? (await perms.request(["mcp"])).mcp : "unavailable";
+      if (st === "granted") return refresh();
+      if (perms) await perms.manage().catch(() => {});
+      refresh();
+    } catch { refresh(); }
+  });
   $("toggleConnect").addEventListener("click", () => { $("connect").hidden = !$("connect").hidden; });
   $("sheetForm").addEventListener("submit", async (ev) => {
     ev.preventDefault();
@@ -518,25 +559,32 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
   });
   $("useDemo").addEventListener("click", async () => { await saveSheet(null); $("connectMsg").textContent = ""; refresh(); });
 
-  // First paint: example data, then upgrade if a sheet is configured.
-  render(score(EXAMPLE).list);
-  state.sheetId = local.get();
-  if (state.sheetId) { $("sheetUrl").value = `https://docs.google.com/spreadsheets/d/${state.sheetId}/edit`; refresh(); }
-
+  // ---------- Boot ----------
+  // 1) the sheet this page belongs to, 2) the shared snapshot so everyone sees standings at once,
+  // 3) a live read through the viewer's Google Drive.
   (async () => {
-    if (!window.claude || typeof window.claude.use !== "function") return;
-    const db = await window.claude.use("db");
-    if (!db) return;
-    dbRef = db.doc(SHEET_DOC);
-    try {
-      const snap = await dbRef.get();
-      const id = snap.exists ? (snap.data() || {}).sheetId : null;
-      if (id && id !== state.sheetId) {
-        state.sheetId = id;
-        $("sheetUrl").value = `https://docs.google.com/spreadsheets/d/${id}/edit`;
-        refresh();
-      }
-    } catch {}
+    const saved = local.get();
+    state.sheetId = saved === "demo" ? null : (saved || DEFAULT_SHEET);
+    if (!state.sheetId) return showDemo();
+    $("sheetUrl").value = `https://docs.google.com/spreadsheets/d/${state.sheetId}/edit`;
+    render([]);
+    setMode("snap", "Loading the latest standings…");
+    if (await dbReady) {
+      try {
+        const cfg = await db.doc(SHEET_DOC).get();
+        const id = cfg.exists ? (cfg.data() || {}).sheetId : null;
+        if (id && !saved) { state.sheetId = id; $("sheetUrl").value = `https://docs.google.com/spreadsheets/d/${id}/edit`; }
+      } catch {}
+      try {
+        const snap = await db.doc(SNAP_DOC).get();
+        const d = snap.exists ? snap.data() : null;
+        if (d && typeof d.text === "string" && d.sheetId === state.sheetId) {
+          snapshot = d;
+          show(d.text, d.updatedAt, "snap");
+        }
+      } catch {}
+    }
+    refresh();
   })();
 })();
 </script>
