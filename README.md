@@ -26,7 +26,8 @@ Google Form ──► Google Sheet (responses) ──► Claude reads it ──�
 - **Single file:** `index.html` is a complete web page (styles, logic and data inline, no build step), served as-is by GitHub Pages. `.nojekyll` makes Pages serve it untouched.
 - `tools/artifact_copy.py` writes the body-only copy that gets published to claude.ai.
 - **Data is hard-coded** in the `<script type="application/json" id="bb-data">` block: the sheet's rows as JSON plus when they were pulled. The page needs no Google access, so it works for anyone with the link, on any device.
-- **Refreshing:** ask Claude to refresh. It reads the sheet through Google Drive, saves the text to a file, runs `python3 tools/update_data.py <file>` to bake the rows into `index.html`, commits and pushes (GitHub Pages redeploys in about a minute) and republishes the claude.ai copy.
+- **Refreshing:** tap **Refresh leaderboard** on the private control page (https://claude.ai/artifact/NZxmMPfr5Bk7k5tgzqGV23, `tools/control.html`), or ask Claude in chat. The button fires the routine `trig_01QkWRwfwK2XVsx2ZSTWVwyT`, which wakes the Claude session that has Google Drive access; it follows `tools/REFRESH.md` and reports back on the control page.
+- **What a refresh does:** It reads the sheet through Google Drive, saves the text to a file, runs `python3 tools/update_data.py <file>` to bake the rows into `index.html`, commits and pushes (GitHub Pages redeploys in about a minute) and republishes the claude.ai copy.
 - `update_data.py` accepts Drive's markdown-table export or a CSV/TSV download of the sheet, and warns if fewer rows came through than the sheet holds.
 - The page scores the rows in the browser and lists rows it couldn't count (missing name, unreadable volume or ABV) so they can be fixed in the sheet.
 - Two tabs: **Standings** (jerseys + General Classification) and **All entries** (every sheet row, newest first, with each row's AU). Link straight to the second tab with `#entries`.

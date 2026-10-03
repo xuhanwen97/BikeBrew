@@ -2,6 +2,7 @@
 """Bake the latest drinks sheet into index.html.
 
 Usage: python3 tools/update_data.py <sheet.txt>
+Exit code 3 (prints UNCHANGED) when the page already has exactly these rows.
 
 <sheet.txt> is the sheet's text as Google Drive exports it (a markdown table),
 or a CSV/TSV export. The rows replace the JSON inside <script id="bb-data">.
@@ -39,9 +40,16 @@ def main(src):
     m = re.search(r"Table Range:\s*[A-Z]+(\d+):[A-Z]+(\d+)", text)
     if m and len(rows) - 1 < int(m[2]) - int(m[1]):
         print(f"WARNING: sheet has {int(m[2]) - int(m[1])} responses but only {len(rows) - 1} came through.")
+    page = PAGE.read_text()
+    current = re.search(r'<script type="application/json" id="bb-data">([\s\S]*?)</script>', page)
+    try:
+        if current and json.loads(current[1].replace("<\\/", "</"))["rows"] == rows:
+            print(f"UNCHANGED: the page already has these {len(rows) - 1} responses.")
+            sys.exit(3)
+    except (ValueError, KeyError):
+        pass
     blob = json.dumps({"updatedAt": int(time.time() * 1000), "rows": rows}, ensure_ascii=False, indent=0)
     blob = blob.replace("</", "<\\/")
-    page = PAGE.read_text()
     new, n = re.subn(r'(<script type="application/json" id="bb-data">)[\s\S]*?(</script>)',
                      lambda mm: mm[1] + "\n" + blob + "\n" + mm[2], page)
     if n != 1:
