@@ -186,6 +186,23 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
 .entries-t .num { text-align: right; font-family: var(--f-data); font-weight: 700; }
 .entries-t .rowno { color: var(--muted); font-family: var(--f-data); }
 .entries-t tr.raw-bad td { color: var(--polka); }
+/* Stage wins */
+.stages h2 { font-family: var(--f-display); font-weight: 400; font-size: 28px; margin: 0 0 4px; }
+.stages > .sub { color: var(--muted); margin: 0 0 12px; font-size: 14px; }
+.stage-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 12px; }
+.stage { background: var(--surface); border-radius: 14px; box-shadow: var(--shadow); padding: 14px 16px; display: grid; gap: 2px; align-content: start;
+  border-left: 5px solid var(--amber); min-width: 0; }
+.stage-no { font: 700 12px/1 var(--f-data); letter-spacing: .12em; text-transform: uppercase; color: var(--amber); }
+.stage-win { font-family: var(--f-display); font-size: 22px; line-height: 1.15; margin-top: 6px; overflow-wrap: anywhere; }
+.stage-au { font: 700 17px/1.3 var(--f-data); font-variant-numeric: tabular-nums; margin-top: 2px; }
+.stage-rest { list-style: none; margin: 8px 0 0; padding: 6px 0 0; border-top: 1px dashed var(--line); display: grid; gap: 2px; counter-reset: pod 1; }
+.stage-rest li { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; counter-increment: pod; }
+.stage-rest li span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.stage-rest li span:first-child::before { content: counter(pod) ". "; font-family: var(--f-data); font-weight: 700; }
+.stage-meta { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.wins { display: inline-block; font: 700 11px/1 var(--f-data); letter-spacing: .08em; text-transform: uppercase; color: var(--on-yellow);
+  background: var(--yellow); border-radius: 999px; padding: 4px 8px; }
+
 /* Qualification */
 .nq { display: inline-block; font: 700 11px/1 var(--f-data); letter-spacing: .08em; text-transform: uppercase; color: var(--amber);
   border: 1px dashed var(--amber); border-radius: 999px; padding: 4px 8px; background: var(--foam); }
@@ -254,6 +271,12 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
 
   <section class="jerseys" id="jerseys" aria-label="Jersey leaders"></section>
 
+  <section class="stages" aria-labelledby="stagesTitle">
+    <h2 id="stagesTitle">Stage wins</h2>
+    <p class="sub">Each stop is a stage. The winner is the rider with the most AU at that stop; every rider can win a stage.</p>
+    <div class="stage-grid" id="stages"></div>
+  </section>
+
   <section class="gc">
     <h2>General Classification</h2>
     <p class="sub" id="gcSub">Ranked by total alcohol units. Riders need 3 counted drinks to qualify. Gaps are measured to the leader in yellow. Tap Drinks to see a rider’s rows from the sheet.</p>
@@ -269,6 +292,7 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
       <div><dt>Drinks</dt><dd><code>Number of counted rows for the rider (ABV ≥ 0.4%)</code></dd></div>
       <div><dt>Volume</dt><dd><code>Σ fl oz for every counted drink</code></dd></div>
       <div><dt>Avg ABV (volume-weighted)</dt><dd><code>Σ (fl oz × ABV%) ÷ Σ fl oz = Total AU ÷ Volume</code></dd></div>
+      <div><dt>Stage win</dt><dd><code>Most Σ (fl oz × ABV%) at one stop; ties share it</code></dd></div>
       <div><dt>Each drink's AU</dt><dd><code>fl oz × ABV%, e.g. 12 oz × 5 = 60 AU</code></dd></div>
     </dl>
   </section>
@@ -904,7 +928,9 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
         return;
       }
       if (iStop >= 0) { const s = parseFloat(r[iStop]); if (isFinite(s)) stop = isFinite(stop) ? Math.max(stop, s) : s; }
-      const rd = riders.get(key) || { name: shown, forms: new Set(), drinks: 0, au: 0, ml: 0, abvMl: 0, entries: [] };
+      const rd = riders.get(key) || { name: shown, forms: new Set(), drinks: 0, au: 0, ml: 0, abvMl: 0, entries: [], stageAu: new Map() };
+      const stopNo = iStop >= 0 ? parseFloat(r[iStop]) : NaN;
+      if (isFinite(stopNo)) rd.stageAu.set(stopNo, (rd.stageAu.get(stopNo) || 0) + au);
       rd.forms.add(name);
       rd.drinks++; rd.au += au;
       rd.entries.push({ row: sheetRow, cells: r, au });
@@ -917,7 +943,15 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
       if (rd) rd.entries = [...rd.entries, ...extra].sort((a, b) => a.row - b.row);
     }
     const list = [...riders.values()].map(r => ({ ...r, forms: [...r.forms], avgAbv: r.ml > 0 ? r.abvMl / r.ml : NaN }));
-    return { list, skipped, stop, headers: rows[hi], iName, all, unmapped: [...unmapped] };
+    // Stages: per stop, riders ranked by AU at that stop. Ties share the win.
+    const stopNos = [...new Set(list.flatMap(r => [...r.stageAu.keys()]))].sort((a, b) => a - b);
+    const stages = stopNos.map(no => {
+      const ranked = list.filter(r => r.stageAu.has(no)).map(r => ({ r, au: r.stageAu.get(no) })).sort((a, b) => b.au - a.au);
+      const winners = ranked.filter(x => x.au === ranked[0].au);
+      winners.forEach(x => { x.r.stageWins = (x.r.stageWins || 0) + 1; });
+      return { no, ranked, winners };
+    });
+    return { list, skipped, stop, headers: rows[hi], iName, all, unmapped: [...unmapped], stages };
   }
 
   // ---------- Rendering ----------
@@ -960,6 +994,21 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
   }
 
   const qualified = (r) => r.drinks >= MIN_DRINKS;
+  const winsPill = (r) => r.stageWins ? `<span class="wins" title="Stage wins">${r.stageWins} stage win${r.stageWins === 1 ? "" : "s"}</span>` : "";
+  function renderStages(stages) {
+    $("stages").innerHTML = stages.length ? stages.map(st => {
+      const w = st.winners;
+      const rest = st.ranked.filter(x => !w.includes(x)).slice(0, 2);
+      return `<article class="stage">
+        <div class="stage-no">Stage ${esc(st.no)}</div>
+        <div class="stage-win">${w.map(x => esc(x.r.name)).join(" &amp; ")}</div>
+        <span class="formname">Form: ${w.map(x => x.r.forms.map(esc).join(", ")).join(" / ")}</span>
+        <div class="stage-au">${fmtAu(w[0].au)} AU${w.length > 1 ? " each (tie)" : ""}</div>
+        ${rest.length ? `<ol class="stage-rest" style="counter-reset: pod ${w.length}">${rest.map(x => `<li><span>${esc(x.r.name)}</span><span>${fmtAu(x.au)}</span></li>`).join("")}</ol>` : ""}
+        <div class="stage-meta">${st.ranked.length} rider${st.ranked.length === 1 ? "" : "s"} scored</div>
+      </article>`;
+    }).join("") : `<p class="sub">No stops logged yet.</p>`;
+  }
   const nqPill = (r) => `<span class="nq" title="Needs ${MIN_DRINKS} counted drinks to qualify">Not qualified · ${r.drinks}/${MIN_DRINKS}</span>`;
 
   function render(list, headers = [], iName = -1) {
@@ -994,7 +1043,7 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
       const gap = r === top || r.au > top.au ? "" : ` <span class="gap">+${fmtAu(top.au - r.au)}</span>`;
       const rawId = "raw-" + i;
       const btn = r.entries && r.entries.length ? `<button class="raw-btn" type="button" aria-expanded="false" aria-controls="${rawId}">Drinks</button>` : "";
-      return (i === inGc.length ? divider : "") + `<tr${isQ ? "" : ' class="nq-rider"'}><td class="pos">${isQ ? i + 1 : "–"}</td><td><span class="rider">${esc(r.name)}${dots ? `<span class="dots">${dots}</span>` : ""}${isQ ? "" : nqPill(r)}${btn}</span>${formLine(r)}<span class="sub-m">${r.drinks} drink${r.drinks === 1 ? "" : "s"} · ${fmtVol(r.ml)} · ${isFinite(r.avgAbv) ? fmt(r.avgAbv, 1) + "%" : "–"}</span></td>
+      return (i === inGc.length ? divider : "") + `<tr${isQ ? "" : ' class="nq-rider"'}><td class="pos">${isQ ? i + 1 : "–"}</td><td><span class="rider">${esc(r.name)}${dots ? `<span class="dots">${dots}</span>` : ""}${winsPill(r)}${isQ ? "" : nqPill(r)}${btn}</span>${formLine(r)}<span class="sub-m">${r.drinks} drink${r.drinks === 1 ? "" : "s"} · ${fmtVol(r.ml)} · ${isFinite(r.avgAbv) ? fmt(r.avgAbv, 1) + "%" : "–"}</span></td>
         <td class="au">${fmtAu(r.au)}${gap}</td><td>${r.drinks}</td><td>${fmtVol(r.ml)}</td><td>${isFinite(r.avgAbv) ? fmt(r.avgAbv, 2) + "%" : "–"}</td></tr>` +
         (btn ? `<tr class="raw-row" id="${rawId}" hidden><td colspan="6">${rawTable(r, headers, iName)}</td></tr>` : "");
     }).join("") : `<tr><td colspan="6" style="display:table-cell;text-align:center;color:var(--muted);padding:24px">No drinks logged yet. The first pour takes yellow.</td></tr>`;
@@ -1094,8 +1143,9 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
   function build(names) {
     if (!rows.length) { render([]); $("status").textContent = "No standings yet."; return; }
     try {
-      const { list, skipped, stop, headers, iName, all, unmapped } = score(rows, names);
+      const { list, skipped, stop, headers, iName, all, unmapped, stages } = score(rows, names);
       render(list, headers, iName);
+      renderStages(stages);
       renderEntries(all, headers, iName);
       const drinks = list.reduce((s, r) => s + r.drinks, 0);
       // Latest form timestamp, shown as the sheet wrote it (event local time).
