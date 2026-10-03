@@ -186,6 +186,8 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
 .entries-t .num { text-align: right; font-family: var(--f-data); font-weight: 700; }
 .entries-t .rowno { color: var(--muted); font-family: var(--f-data); }
 .entries-t tr.raw-bad td { color: var(--polka); }
+.entries-t tr.raw-na td, .raw-t tr.raw-na td { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1px; }
+.entries-t tr.raw-na td.num, .raw-t tr.raw-na td.raw-au { text-decoration: none; }
 
 /* Per-rider raw sheet rows */
 .rider { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
@@ -258,7 +260,7 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
     <dl class="gc-key">
       <div><dt>Total AU</dt><dd><code>Σ (fl oz × ABV%) for every counted drink</code></dd></div>
       <div><dt>Gap</dt><dd><code>Leader's Total AU − rider's Total AU</code></dd></div>
-      <div><dt>Drinks</dt><dd><code>Number of counted rows for the rider</code></dd></div>
+      <div><dt>Drinks</dt><dd><code>Number of counted rows for the rider (ABV ≥ 0.4%)</code></dd></div>
       <div><dt>Volume</dt><dd><code>Σ fl oz for every counted drink</code></dd></div>
       <div><dt>Avg ABV (volume-weighted)</dt><dd><code>Σ (fl oz × ABV%) ÷ Σ fl oz = Total AU ÷ Volume</code></dd></div>
       <div><dt>Each drink's AU</dt><dd><code>fl oz × ABV%, e.g. 12 oz × 5 = 60 AU</code></dd></div>
@@ -275,7 +277,7 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
   </section>
 
   <footer class="foot">
-    <div><strong>How AU is scored.</strong> Alcohol units (AU) are fluid ounces × ABV%. A 12 oz beer at 5% is 60 AU.</div>
+    <div><strong>How AU is scored.</strong> Alcohol units (AU) are fluid ounces × ABV%. A 12 oz beer at 5% is 60 AU. Drinks under 0.4% ABV (non-alcoholic) aren't counted in any stat: not AU, drinks, volume or average ABV.</div>
     <div><strong>Jerseys.</strong> Yellow: most total AU. Green: highest average ABV. Polka dot: most total fluid ounces, the toughest climb. White: lowest average ABV. Average ABV is weighted by volume, so a 16 oz pour counts four times as much as a 4 oz taster. Rows that can't be read (no name, or a volume or ABV that isn't a number) aren't counted in any stat.</div>
   </footer>
 </div>
@@ -745,6 +747,7 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
 (() => {
   "use strict";
   const ML_PER_OZ = 29.5735; // AU = fl oz × ABV%
+  const MIN_ABV = 0.4;        // drinks under 0.4% ABV (non-alcoholic) don't count toward any stat
   const $ = (id) => document.getElementById(id);
 
 
@@ -780,7 +783,7 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
   function toAbv(raw) {
     const n = parseFloat(String(raw).replace(",", ".").replace(/[^0-9.]/g, ""));
     if (!isFinite(n)) return NaN;
-    return n > 0 && n < 1 && !/%/.test(String(raw)) ? n * 100 : n; // 0.05 → 5%
+    return n; // a percentage as typed: "5", "5%" and "5.0" are all 5%
   }
 
   // names: [[form name, display name], ...] from the Rider Names sheet.
@@ -820,6 +823,12 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
         all.push({ row: sheetRow, cells: r, au: NaN, note: `Unreadable ${bad.split(" ")[0]}`, shown });
         if (!uncounted.has(key)) uncounted.set(key, []);
         uncounted.get(key).push({ row: sheetRow, cells: r, au: NaN });
+        return;
+      }
+      if (isFinite(abv) && abv < MIN_ABV) {
+        all.push({ row: sheetRow, cells: r, au: NaN, note: `Under ${MIN_ABV}% ABV`, shown, na: true });
+        if (!uncounted.has(key)) uncounted.set(key, []);
+        uncounted.get(key).push({ row: sheetRow, cells: r, au: NaN, na: true });
         return;
       }
       if (iStop >= 0) { const s = parseFloat(r[iStop]); if (isFinite(s)) stop = isFinite(stop) ? Math.max(stop, s) : s; }
@@ -872,9 +881,9 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
   function rawTable(r, headers, iName) {
     const cols = headers.map((h, i) => i);
     const head = cols.map(i => `<th>${esc(headers[i])}</th>`).join("") + "<th>AU</th>";
-    const body = r.entries.map(e => `<tr${isFinite(e.au) ? "" : ' class="raw-bad"'}>` +
+    const body = r.entries.map(e => `<tr${isFinite(e.au) ? "" : e.na ? ' class="raw-na"' : ' class="raw-bad"'}>` +
       cols.map(i => `<td>${esc(e.cells[i] ?? "")}</td>`).join("") +
-      `<td class="raw-au">${isFinite(e.au) ? fmtAu(e.au) : "Not counted"}</td></tr>`).join("");
+      `<td class="raw-au">${isFinite(e.au) ? fmtAu(e.au) : e.na ? `Under ${MIN_ABV}%` : "Not counted"}</td></tr>`).join("");
     return `<div class="raw-box"><table class="raw-t"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
   }
 
@@ -913,13 +922,13 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
 
   function renderEntries(all, headers, iName) {
     const head = `<th>Row</th>` + headers.map((h, i) => `<th>${esc(h)}</th>` + (i === iName ? "<th>Display name</th>" : "")).join("") + `<th class="num">AU</th>`;
-    const body = [...all].reverse().map(e => `<tr${e.note ? ' class="raw-bad"' : ""}><td class="rowno">${e.row}</td>` +
+    const body = [...all].reverse().map(e => `<tr${e.na ? ' class="raw-na"' : e.note ? ' class="raw-bad"' : ""}><td class="rowno">${e.row}</td>` +
       headers.map((h, i) => `<td>${esc(e.cells[i] ?? "")}</td>` + (i === iName ? `<td class="disp">${esc(e.shown || "")}</td>` : "")).join("") +
       `<td class="num">${e.note ? esc(e.note) : fmtAu(e.au)}</td></tr>`).join("");
     $("entriesTable").innerHTML = `<thead><tr>${head}</tr></thead><tbody>${body}</tbody>`;
-    const bad = all.filter(e => e.note).length;
+    const bad = all.filter(e => e.note && !e.na).length, na = all.filter(e => e.na).length;
     $("entriesSub").textContent = `${all.length} rows in the sheet, newest first, with the AU each scored.` +
-      (bad ? ` ${bad} not counted, shown in red.` : "");
+      (bad ? ` ${bad} can't be read, shown in red.` : "") + (na ? ` ${na} under ${MIN_ABV}% ABV, shown greyed out and not counted.` : "");
   }
 
   function showIssues(notes) {

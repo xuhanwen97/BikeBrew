@@ -17,6 +17,8 @@ Also on claude.ai: https://claude.ai/artifact/1A8iqA15we3wFGWQZywv1M (viewers ne
 **AU (alcohol units):** fluid ounces × ABV%.
 `AU = fl oz × ABV%`. Example: a 12 oz beer at 5% = 60 AU.
 
+**Non-alcoholic drinks:** anything under 0.4% ABV is left out of every stat (AU, drinks, volume, average ABV). It still appears in All entries and the rider's Drinks list, greyed out.
+
 ## Architecture
 
 ```
@@ -42,7 +44,7 @@ Recommended questions. Columns are matched by header name, so wording can vary:
 | Name | Dropdown of riders | A dropdown avoids spelling splits ("Han" vs "han " already merge) |
 | Drink | Short answer | Optional, for flavour |
 | Volume (ml) | Dropdown or number | Also accepts `oz`/`L` in the header, or `330ml`, `12oz`, `pint`, `schooner`, `shot` in the answer |
-| ABV (%) | Number | `5`, `5%` and `0.05` all read as 5% |
+| ABV (%) | Number | Read as a percentage as typed: `5` and `5%` are 5%. Under 0.4% isn't counted |
 | Standard drinks | Number (optional) | If present, used as-is instead of computing |
 
 ## Build plan
