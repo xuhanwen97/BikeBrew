@@ -280,7 +280,7 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
 
   <section class="podium-sec" aria-labelledby="podiumTitle">
     <h2 id="podiumTitle">Yellow jersey podium</h2>
-    <p class="sub">The top three qualified riders on total AU, as their spirit animals.</p>
+    <p class="sub">The top three qualified riders on total AU, as their spirit animals. No animal picked yet? You're Pac-Man.</p>
     <div class="podium" id="podium"></div>
   </section>
 
@@ -342,7 +342,7 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
 
 <script type="application/json" id="bb-data">
 {
-"updatedAt": 1791058300689,
+"updatedAt": 1791058383769,
 "rows": [
 [
 "Timestamp",
@@ -805,7 +805,7 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
 [
 "Matt",
 "Matt",
-""
+"Giraffe"
 ],
 [
 "Ari",
@@ -820,7 +820,7 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
 [
 "Michael",
 "Michael",
-""
+"Panda"
 ],
 [
 "Sucher",
@@ -850,7 +850,7 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
 [
 "Teags",
 "Teags",
-""
+"Giraffe"
 ],
 [
 "Sherry",
@@ -1070,15 +1070,15 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
     raccoon: { base: "#8f969c", light: "#eef0f2", dark: "#2b2f36", inner: "#2b2f36", ear: "pointy", muzzle: "fox", extras: ["mask"] },
     sheep:   { base: "#5a5048", light: "#f5f1ea", dark: "#2a241f", inner: "#f7b8c4", ear: "side", muzzle: "sheep", extras: ["wool"] },
     unicorn: { base: "#ffffff", light: "#ffe3f1", dark: "#7a4fb5", inner: "#f7b8c4", ear: "pointy", muzzle: "horse", extras: ["horn", "unimane"] },
+    giraffe: { base: "#f2c14e", light: "#f8dc96", dark: "#9a5a26", inner: "#9a5a26", ear: "side", muzzle: "horse", extras: ["giraffespots", "ossicones"] },
     horse:   { base: "#9c6a3f", light: "#d8b48d", dark: "#3b2416", inner: "#3b2416", ear: "pointy", muzzle: "horse", extras: ["horsemane"] },
   };
   const ANIMAL_ALIASES = {
     kitty: "cat", kitten: "cat", puppy: "dog", pup: "dog", doggo: "dog", retriever: "dog", lab: "dog", labrador: "dog", corgi: "dog", pug: "dog",
     bunny: "rabbit", hare: "rabbit", grizzly: "bear", polar: "bear", piglet: "pig", hog: "pig", boar: "pig", bull: "cow", cattle: "cow",
     ape: "monkey", chimp: "monkey", gorilla: "monkey", toad: "frog", lamb: "sheep", ram: "sheep", pony: "horse", mice: "mouse", rat: "mouse",
-    kitsune: "fox", husky: "wolf", trash: "raccoon", goose: "duck", chick: "duck",
+    giraffes: "giraffe", giraf: "giraffe", kitsune: "fox", husky: "wolf", trash: "raccoon", goose: "duck", chick: "duck",
   };
-  const POOL = ["cat", "dog", "fox", "bear", "panda", "koala", "rabbit", "pig", "lion", "tiger", "monkey", "frog", "owl", "penguin", "raccoon", "cow"];
   // "Red Panda" -> panda, "Golden Retriever" -> dog, "Cats" -> cat. Unknown -> null.
   function resolveAnimal(text) {
     const words = String(text || "").toLowerCase().replace(/[^a-z\s]/g, " ").split(/\s+/).filter(Boolean);
@@ -1090,15 +1090,27 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
     }
     return null;
   }
-  // taken: animals already on the podium, so automatic picks don't repeat.
-  function animalFor(r, taken = []) {
+  // Riders with no animal (or one the page can't draw) get Pac-Man.
+  function animalFor(r) {
     const chosen = resolveAnimal(r.animal);
-    if (chosen) return { kind: chosen, typed: r.animal };
-    let i = hashName(r.name) % POOL.length;
-    while (taken.includes(POOL[i]) && taken.length < POOL.length) i = (i + 1) % POOL.length;
-    return { kind: POOL[i], typed: r.animal || "" };
+    return { kind: chosen || "pacman", typed: r.animal || "" };
+  }
+  const MEDAL_SVG = (place, o) => `<path d="M44 100 L48 116 L52 100" fill="none" stroke="#1d1a16" stroke-width="2"/><circle cx="48" cy="120" r="7" fill="${MEDAL[place]}" ${o}/><text x="48" y="123.5" text-anchor="middle" font-size="9" font-weight="700" fill="#1d1a16" font-family="Barlow Condensed, sans-serif">${place + 1}</text>`;
+  function pacmanSvg(r, place) {
+    const o = 'stroke="#1d1a16" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"';
+    const kit = place === 0 ? "#f2c200" : KIT[hashName(r.name + "kit") % KIT.length];
+    return `<svg class="avatar" viewBox="0 0 130 132" role="img" aria-label="Pac-Man for ${esc(r.name)}">
+      <path d="M16 132 C16 102 36 94 60 94 C84 94 104 102 104 132 Z" fill="${kit}" ${o}/>
+      <path d="M52 95 L60 108 L68 95" fill="none" ${o}/><path d="M60 108 V132" ${o}/>
+      <path d="M42 112 L36 132 M78 112 L84 132" stroke="#fff" stroke-width="3" opacity=".55"/>
+      <path d="M60 58 L91 41 A35 35 0 1 0 91 75 Z" fill="#ffd400" ${o}/>
+      <circle cx="58" cy="38" r="4.6" fill="#1d1a16"/>
+      <circle cx="104" cy="58" r="4.5" fill="#ffb3a8" ${o}/><circle cx="121" cy="58" r="4.5" fill="#ffb3a8" ${o}/>
+      ${MEDAL_SVG(place, o)}
+    </svg>`;
   }
   function avatarSvg(r, place, kind) {
+    if (kind === "pacman") return pacmanSvg(r, place);
     const a = ANIMALS[kind];
     const kit = place === 0 ? "#f2c200" : KIT[hashName(r.name + "kit") % KIT.length];
     const o = 'stroke="#1d1a16" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"';
@@ -1128,6 +1140,7 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
     const floppy = a.ear === "floppy" ? `<path d="M37 40 C24 42 22 66 30 74 C36 70 40 56 42 46 Z" fill="${a.inner}" ${o}/><path d="M83 40 C96 42 98 66 90 74 C84 70 80 56 78 46 Z" fill="${a.inner}" ${o}/>` : "";
     const marks = (x("stripes") ? `<path d="M54 35 L56 43 M60 34 L60 43 M66 35 L64 43" stroke="${a.dark}" stroke-width="3" stroke-linecap="round"/>` : "")
       + (x("tigerstripes") ? `<path d="M52 34 L55 44 M60 33 L60 44 M68 34 L65 44 M34 56 L44 58 M35 64 L43 64 M86 56 L76 58 M85 64 L77 64" stroke="${a.dark}" stroke-width="3.2" stroke-linecap="round"/>` : "")
+      + (x("giraffespots") ? `<path d="M42 44 l6 -3 l4 5 l-5 5 l-6 -2 Z M68 40 l7 -1 l2 6 l-6 4 l-4 -4 Z M74 56 l6 0 l1 6 l-6 2 Z M40 58 l5 -2 l3 5 l-5 3 Z M56 38 l5 -2 l3 4 l-4 4 l-4 -2 Z" fill="${a.dark}"/>` : "")
       + (x("spots") ? `<path d="M40 40 C46 34 54 38 50 46 C46 52 38 48 40 40 Z M72 44 C78 38 86 44 82 52 C78 56 70 52 72 44 Z" fill="${a.dark}"/>` : "")
       + (x("patches") ? `<ellipse cx="49" cy="58" rx="7" ry="9" transform="rotate(25 49 58)" fill="${a.dark}"/><ellipse cx="71" cy="58" rx="7" ry="9" transform="rotate(-25 71 58)" fill="${a.dark}"/>` : "")
       + (x("mask") ? `<path d="M36 56 C42 48 54 52 60 56 C66 52 78 48 84 56 C80 66 68 66 60 62 C52 66 40 66 36 56 Z" fill="${a.dark}"/>` : "");
@@ -1157,6 +1170,7 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
       horse: `<ellipse cx="60" cy="78" rx="15" ry="10" fill="${a.light}" ${o}/><ellipse cx="55" cy="78" rx="2" ry="3" fill="${a.dark}"/><ellipse cx="65" cy="78" rx="2" ry="3" fill="${a.dark}"/>`,
     }[a.muzzle];
     const top = (x("horns") ? `<path d="M42 36 C38 28 40 22 46 22 C44 28 46 32 48 34 Z M78 36 C82 28 80 22 74 22 C76 28 74 32 72 34 Z" fill="#f6e7c1" ${o}/>` : "")
+      + (x("ossicones") ? `<path d="M50 34 L48 16 M70 34 L72 16" stroke="${a.base}" stroke-width="6" stroke-linecap="round"/><path d="M50 34 L48 16 M70 34 L72 16" stroke="#1d1a16" stroke-width="2.4" stroke-linecap="round" fill="none" opacity="0"/><circle cx="48" cy="15" r="5" fill="${a.dark}" ${o}/><circle cx="72" cy="15" r="5" fill="${a.dark}" ${o}/>` : "")
       + (x("horn") ? `<path d="M56 32 L60 6 L64 32 Z" fill="#ffd76a" ${o}/><path d="M57 26 L63 24 M58 19 L62 17" stroke="#c98d3e" stroke-width="1.6"/>` : "")
       + (x("tuft") ? `<path d="M56 34 C54 26 60 24 60 32 C62 24 68 26 64 34 Z" fill="${a.base}" ${o}/>` : "");
     const whiskers = x("whiskers") ? `<path d="M44 68 L32 66 M44 72 L32 74 M76 68 L88 66 M76 72 L88 74" stroke="#1d1a16" stroke-width="1.4" stroke-linecap="round"/>` : "";
@@ -1174,8 +1188,7 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
   function renderPodium(list) {
     const top = list.filter(qualified).sort((a, b) => b.au - a.au).slice(0, 3);
     if (!top.length) { $("podium").innerHTML = `<p class="sub">No one has ${MIN_DRINKS} counted drinks yet.</p>`; return; }
-    const kinds = [];
-    top.forEach(r => kinds.push(animalFor(r, kinds).kind));
+    const kinds = top.map(r => animalFor(r).kind);
     const slots = [1, 0, 2]; // classic podium order: 2nd, 1st, 3rd
     $("podium").innerHTML = slots.map(i => {
       const r = top[i];
@@ -1183,7 +1196,7 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
       return `<div class="step step-${i + 1}">
         ${avatarSvg(r, i, kinds[i])}
         <div class="step-name">${esc(r.name)}</div>
-        <div class="step-animal">the ${esc(kinds[i])}</div>
+        <div class="step-animal">${kinds[i] === "pacman" ? "Pac-Man" : `the ${esc(kinds[i])}`}</div>
         ${formLine(r)}
         <div class="step-au">${fmtAu(r.au)} AU${i ? ` <span class="gap">+${fmtAu(top[0].au - r.au)}</span>` : ""}</div>
         <div class="block"><span>${i + 1}</span></div>
@@ -1352,7 +1365,7 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
       const lastTime = last ? (String(last).match(/(\d{1,2}):(\d{2})/) || []) : [];
       const when = lastTime.length ? `${(+lastTime[1] % 12) || 12}:${lastTime[2]} ${+lastTime[1] < 12 ? "AM" : "PM"}` : "";
       $("status").textContent = [when && `Latest drink ${when}`, isFinite(stop) && `after stop ${stop}`, `${drinks} drinks from ${list.length} riders`].filter(Boolean).join(" · ");
-      const oddAnimals = list.filter(r => r.animal && !resolveAnimal(r.animal)).map(r => `${esc(r.name)}'s animal "${esc(r.animal)}" isn't one the podium can draw yet, so they get a ${esc(animalFor(r).kind)}`);
+      const oddAnimals = list.filter(r => r.animal && !resolveAnimal(r.animal)).map(r => `${esc(r.name)}'s animal "${esc(r.animal)}" isn't one the podium can draw yet, so they get Pac-Man`);
       showIssues([...oddAnimals, ...unmapped.map(n => `${esc(n)} isn't in the Rider Names sheet yet, so their form name is shown as their display name`), ...skipped.map(esc)]);
     } catch (e) {
       render([]);

@@ -19,7 +19,7 @@ Also on claude.ai: https://claude.ai/artifact/1A8iqA15we3wFGWQZywv1M (viewers ne
 
 **Qualifying:** a rider needs at least 3 counted drinks to hold a jersey or a place in the General Classification. Until then they're listed below a "Not yet qualified" line, flagged with their count (e.g. 2/3).
 
-**Yellow jersey podium:** at the top of the page, the top three qualified riders on total AU stand on a 2-1-3 podium as cartoon animals in cycling kit (the leader in yellow). Each rider's animal comes from the **Animal** column of the Rider Names sheet (free text: "Red Panda" → panda, "Golden Retriever" → dog). Drawable: cat, dog, fox, wolf, bear, panda, koala, mouse, rabbit, pig, cow, lion, tiger, monkey, frog, owl, penguin, duck, raccoon, sheep, horse, unicorn. Riders with no animal get one picked from their display name (no repeats on the podium); animals the page can't draw are flagged under the standings.
+**Yellow jersey podium:** at the top of the page, the top three qualified riders on total AU stand on a 2-1-3 podium as cartoon animals in cycling kit (the leader in yellow). Each rider's animal comes from the **Animal** column of the Rider Names sheet (free text: "Red Panda" → panda, "Golden Retriever" → dog). Drawable: cat, dog, fox, wolf, bear, panda, koala, mouse, rabbit, pig, cow, lion, tiger, monkey, frog, owl, penguin, duck, raccoon, sheep, giraffe, horse, unicorn. Riders with no animal, or one the page can't draw, appear as Pac-Man; undrawable animals are also flagged under the standings.
 
 **Stage wins:** each stop is a stage, won by the rider with the most AU at that stop (ties share it). Any rider can win a stage; the count shows next to their name in the General Classification.
 
