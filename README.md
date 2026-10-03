@@ -17,6 +17,8 @@ Also on claude.ai: https://claude.ai/artifact/1A8iqA15we3wFGWQZywv1M (viewers ne
 **AU (alcohol units):** fluid ounces × ABV%.
 `AU = fl oz × ABV%`. Example: a 12 oz beer at 5% = 60 AU.
 
+**Qualifying:** a rider needs at least 3 counted drinks to hold a jersey or a place in the General Classification. Until then they're listed below a "Not yet qualified" line, flagged with their count (e.g. 2/3).
+
 **Non-alcoholic drinks:** anything under 0.4% ABV is left out of every stat (AU, drinks, volume, average ABV). It still appears in All entries and the rider's Drinks list, greyed out.
 
 ## Architecture
@@ -56,5 +58,4 @@ Recommended questions. Columns are matched by header name, so wording can vary:
 5. **Hosting:** GitHub Pages for the public link (Settings → Pages → Deploy from a branch → `claude/bike-brews-leaderboard-u6ptk2`, `/ (root)`), plus a claude.ai artifact. ✅
 6. **Next ideas:**
    - Stages: group by day from the form timestamp, with stage winners.
-   - Minimum-drinks threshold for green/white so one taster can't win the jersey.
    - Rider photos/avatars and a "lanterne rouge" for last place.
