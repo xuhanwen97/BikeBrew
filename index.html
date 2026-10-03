@@ -80,6 +80,8 @@ body { background: var(--bg); color: var(--ink); font-family: var(--f-body); fon
 .connect form { display: flex; flex-wrap: wrap; gap: 10px; }
 .connect input { flex: 1 1 280px; min-width: 0; font: 15px var(--f-body); padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
 .connect code { font-family: var(--f-data); background: var(--bg); padding: 1px 6px; border-radius: 6px; }
+.issues { border: 1px dashed var(--amber); background: var(--foam); border-radius: 12px; padding: 10px 14px; font-size: 14px; color: var(--ink); }
+.issues ul { margin: 4px 0 0; padding-left: 20px; color: var(--muted); }
 .msg { font-size: 14px; color: var(--polka); }
 .msg.ok { color: var(--green); }
 
@@ -168,6 +170,8 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
     <button class="ghost" id="toggleConnect" type="button">Sheet settings</button>
   </div>
 
+  <div class="issues" id="issues" role="status" hidden></div>
+
   <section class="connect" id="connect" hidden>
     <h2>Connect the drinks sheet</h2>
     <p>Paste the link to the Google Sheet your form writes to. On this page the sheet is read through your Google Drive connection, so anyone viewing needs Drive connected and access to the sheet.</p>
@@ -231,12 +235,17 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
     return rows.filter(r => r.some(x => x.trim() !== ""));
   }
   function parseTable(text) {
-    const lines = text.split(/\r?\n/);
-    const pipe = lines.filter(l => /^\s*\|.*\|\s*$/.test(l));
-    if (pipe.length >= 2) {
-      return pipe.filter(l => !/^\s*\|[\s:|-]+\|\s*$/.test(l))
-        .map(l => l.trim().replace(/^\||\|$/g, "").split("|").map(s => s.trim()));
+    // Markdown tables (Google Drive's sheet export): split into blocks of consecutive
+    // pipe rows and use the first block that has a usable header row.
+    const blocks = []; let cur = null;
+    for (const l of text.split(/\r?\n/)) {
+      if (/^\s*\|.*\|\s*$/.test(l)) {
+        if (/^\s*\|[\s:|-]+\|\s*$/.test(l)) continue;
+        if (!cur) blocks.push(cur = []);
+        cur.push(l.trim().replace(/^\||\|$/g, "").split(/(?<!\\)\|/).map(c => c.trim().replace(/\\(.)/g, "$1")));
+      } else cur = null;
     }
+    if (blocks.length) return blocks.find(b => locateHeader(b) >= 0) || blocks[0];
     const tabs = (text.match(/\t/g) || []).length, commas = (text.match(/,/g) || []).length;
     return parseDelimited(text, tabs > commas / 2 ? "\t" : ",");
   }
@@ -285,23 +294,31 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
     const iVol = pick(headers, /vol|size|ml|oz|amount|litre|liter|\(l\)|how much/, /abv|alcohol/);
     if (iName < 0 || (iAbv < 0 && iUnits < 0)) throw new Error("Missing a name or ABV column.");
     const riders = new Map();
-    let skipped = 0;
-    for (const r of rows.slice(hi + 1)) {
+    const iStop = pick(headers, /stop|stage/);
+    const skipped = [];
+    let stop = NaN;
+    rows.slice(hi + 1).forEach((r, k) => {
+      const sheetRow = hi + k + 2;
+      if (!r.some(c => String(c).trim())) return;
       const name = String(r[iName] ?? "").trim();
-      if (!name) continue;
+      if (!name) { skipped.push(`row ${sheetRow}: no name`); return; }
       const key = name.toLowerCase().replace(/\s+/g, " ");
       const ml = iVol >= 0 ? toMl(r[iVol] ?? "", headers[iVol]) : NaN;
       const abv = iAbv >= 0 ? toAbv(r[iAbv] ?? "") : NaN;
       let au = iUnits >= 0 ? parseFloat(String(r[iUnits] ?? "").replace(",", ".")) : NaN;
       if (!isFinite(au) && isFinite(ml) && isFinite(abv)) au = (ml / 1000) * abv * ETHANOL;
-      if (!isFinite(au)) { skipped++; continue; }
+      if (!isFinite(au)) {
+        const bad = !isFinite(ml) ? `volume "${r[iVol] ?? ""}"` : `ABV "${r[iAbv] ?? ""}"`;
+        skipped.push(`row ${sheetRow} (${name}): ${bad}`); return;
+      }
+      if (iStop >= 0) { const s = parseFloat(r[iStop]); if (isFinite(s)) stop = isFinite(stop) ? Math.max(stop, s) : s; }
       const rd = riders.get(key) || { name, drinks: 0, au: 0, ml: 0, abvMl: 0 };
       rd.drinks++; rd.au += au;
       if (isFinite(ml)) { rd.ml += ml; if (isFinite(abv)) rd.abvMl += abv * ml; }
       riders.set(key, rd);
-    }
+    });
     const list = [...riders.values()].map(r => ({ ...r, avgAbv: r.ml > 0 ? r.abvMl / r.ml : NaN }));
-    return { list, skipped };
+    return { list, skipped, stop };
   }
 
   // ---------- Rendering ----------
@@ -354,6 +371,11 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
     }).join("") : `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">No drinks logged yet. The first pour takes yellow.</td></tr>`;
   }
 
+  function showIssues(notes) {
+    const box = $("issues");
+    box.hidden = !notes.length;
+    box.innerHTML = notes.length ? `<strong>Not counted (fix these in the sheet):</strong><ul>${notes.map(n => `<li>${n}</li>`).join("")}</ul>` : "";
+  }
   function setMode(kind, text) {
     const m = $("mode");
     m.className = "pill " + kind;
@@ -403,7 +425,7 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
   };
 
   async function refresh() {
-    if (!state.sheetId) { state.rows = EXAMPLE; render(score(EXAMPLE).list); setMode("demo", "Showing example riders until a sheet is connected."); return; }
+    if (!state.sheetId) { showIssues([]); state.rows = EXAMPLE; render(score(EXAMPLE).list); setMode("demo", "Showing example riders until a sheet is connected."); return; }
     const btn = $("refresh");
     btn.disabled = true; btn.classList.add("spin");
     $("status").textContent = "Pouring fresh standings…";
@@ -412,13 +434,24 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
       try { text = await readViaDrive(state.sheetId); }
       catch (e) { if (e && e.code && !["server_not_found", "capability_disabled"].includes(e.code)) throw e; }
       if (text == null) text = await readViaPublicCsv(state.sheetId);
-      const { list, skipped } = score(parseTable(text));
+      const { list, skipped, stop } = score(parseTable(text));
       render(list);
       const t = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-      setMode("live", `Updated ${t} · ${list.reduce((s, r) => s + r.drinks, 0)} drinks from ${list.length} riders` + (skipped ? ` · ${skipped} rows skipped (missing volume or ABV)` : ""));
+      const drinks = list.reduce((s, r) => s + r.drinks, 0);
+      setMode("live", `Updated ${t} · ${isFinite(stop) ? `after stop ${stop} · ` : ""}${drinks} drinks from ${list.length} riders`);
+      // Drive's export states the sheet's range; warn if we got fewer rows than it holds.
+      const range = text.match(/Table Range:\s*[A-Z]+(\d+):[A-Z]+(\d+)/);
+      const notes = skipped.map(esc);
+      if (range) {
+        const expected = +range[2] - +range[1];
+        const seen = drinks + skipped.length;
+        if (seen < expected) notes.unshift(`Only ${seen} of ${expected} responses came through from Google Drive, so the standings may be missing the newest drinks.`);
+      }
+      showIssues(notes);
     } catch (e) {
       const msg = (e && MCP_HELP[e.code]) || (e && e.message) || "Couldn't read the sheet.";
       setMode("err", msg);
+      showIssues([]);
     } finally {
       btn.disabled = false; btn.classList.remove("spin");
     }
