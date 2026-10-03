@@ -19,6 +19,8 @@ Also on claude.ai: https://claude.ai/artifact/1A8iqA15we3wFGWQZywv1M (viewers ne
 
 **Qualifying:** a rider needs at least 3 counted drinks to hold a jersey or a place in the General Classification. Until then they're listed below a "Not yet qualified" line, flagged with their count (e.g. 2/3).
 
+**Yellow jersey podium:** the top three qualified riders on total AU stand on a 2-1-3 podium with cartoon avatars generated from their display names (same look on every refresh; the leader wears yellow).
+
 **Stage wins:** each stop is a stage, won by the rider with the most AU at that stop (ties share it). Any rider can win a stage; the count shows next to their name in the General Classification.
 
 **Non-alcoholic drinks:** anything under 0.4% ABV is left out of every stat (AU, drinks, volume, average ABV). It still appears in All entries and the rider's Drinks list, greyed out.
@@ -59,4 +61,4 @@ Recommended questions. Columns are matched by header name, so wording can vary:
 4. **Refresh:** ask Claude to refresh; it bakes the latest sheet into the page and republishes. ✅
 5. **Hosting:** GitHub Pages for the public link (Settings → Pages → Deploy from a branch → `claude/bike-brews-leaderboard-u6ptk2`, `/ (root)`), plus a claude.ai artifact. ✅
 6. **Next ideas:**
-   - Rider photos/avatars and a "lanterne rouge" for last place.
+   - A "lanterne rouge" for last place.
