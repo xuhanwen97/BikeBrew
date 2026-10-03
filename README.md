@@ -26,10 +26,13 @@ Google Form ──► Google Sheet (responses) ──► Leaderboard page
 ```
 
 - **Single file:** `index.html` holds the page, styles and logic, with no build step.
-- **Reading the sheet:**
-  - On claude.ai the page reads the sheet through the viewer's **Google Drive** connector (`read_file_content`). Each viewer needs Drive connected and access to the sheet.
-  - Hosted anywhere else (e.g. GitHub Pages), it falls back to the public CSV endpoint `https://docs.google.com/spreadsheets/d/<ID>/gviz/tq?tqx=out:csv`. That only works when the sheet is shared as "Anyone with the link can view".
-- **Sheet setting:** the sheet link is stored in the page's shared database (`config/sheet`), so it's set once for everyone. Only editors can change it. Other viewers' choice is saved in their own browser.
+- **Standings baked into the page:** the latest sheet read is embedded in `index.html` (`#bb-data`), so every viewer sees standings, including people who open the link outside Claude or aren't signed in.
+- **Refreshing:**
+  - On claude.ai the page reads the sheet through the viewer's **Google Drive** connector (`read_file_content`).
+  - When the organiser taps **Refresh** and the sheet has changed, the page republishes itself with the new standings embedded, so everyone gets them. Page loads never republish.
+  - Viewers with Drive but without edit rights still get a live read; it's also saved to the shared database (`standings/latest`).
+  - Hosted elsewhere (e.g. GitHub Pages), it falls back to the public CSV endpoint `https://docs.google.com/spreadsheets/d/<ID>/gviz/tq?tqx=out:csv`, which needs the sheet shared as "Anyone with the link can view".
+- **Sheet setting:** defaults to the event sheet; editors can change it under Sheet settings.
 - **Example data** appears until a sheet is connected, marked "Example data".
 
 ## Google Form setup

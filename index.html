@@ -1,4 +1,4 @@
-<title>Bike &amp; Brews</title>
+<!--bb-src--><title>Bike &amp; Brews</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap">
@@ -238,11 +238,16 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
   </footer>
 </div>
 
+<script type="application/json" id="bb-data">{"sheetId": "1RxgUCudXWTEWxoq7LoU9xiT1dIJfdhRePCnjvECsto0", "text": "Context Type: corpus_document\n## Table Context\n### File Name: Bikes & Brews v6 (Responses)\n### Sheet Name: Form Responses 1\n### Table Range: A1:F27\n### Table Sample Data:\n|                    |                 |         |                      |               |                      |\n| :----------------: | :-------------: | :-----: | :------------------: | :-----------: | :------------------: |\n| Timestamp          | Name            | stop \\# | drink volume (fl oz) | drink abv (%) | are you having fun?  |\n| 10/3/2026 11:57:04 | Matt            | 1       | 12                   | 7             | Ready to roll        |\n| 10/3/2026 11:57:43 | Ari             | 1       | 12                   | 5.5           | Yes                  |\n| 10/3/2026 11:58:40 | Jack Sebok      | 1       | 6                    | 4             | No                   |\n| 10/3/2026 11:58:46 | Michael         | 1       | 12                   | 5.5           | A little damp        |\n| 10/3/2026 11:58:53 | Sucher          | 1       | 12                   | 5             | Ready to roll        |\n| 10/3/2026 11:59:56 | Viktor          | 1       | 12 oz                | 5.60%         | Ready to roll        |\n| 10/3/2026 12:00:32 | Kimberly Larkin | 1       | 16                   | O             | Yes                  |\n| 10/3/2026 12:00:55 | Maddie Brickell | 1       | 6                    | 6             | Yes                  |\n| 10/3/2026 12:01:34 | Kiersten        | 1       | 12                   | 5.6           | Yes                  |\n| 10/3/2026 12:01:38 |                 | 1       | 12                   | 4             | A little damp        |\n| 10/3/2026 12:03:48 | Teags           | 1       | 19.2                 | 9.5           | Thirsty              |\n| 10/3/2026 12:04:36 | Sherry          | 1       | 7                    | 4             | Ready to roll        |\n| 10/3/2026 12:04:57 | Tarra           | 1       | 12                   | 5             | Thirsty              |\n| 10/3/2026 12:08:19 | Charles Warden  | 1       | 6                    | 9             | Yes                  |\n| 10/3/2026 12:09:24 | Matt            | 1       | 12                   | 7             | Yes                  |\n| 10/3/2026 12:09:29 | Kimberly Larkin | 1       | 12                   | 5.5           | Yes                  |\n| 10/3/2026 13:05:02 | Ari             | 2       | 13                   | 6             | Beer                 |\n| 10/3/2026 13:07:16 | Teags           | 2       | 9                    | 6.8           | Beer                 |\n| 10/3/2026 13:07:35 | Michael         | 1       | 16                   | 4.1           | Option 6             |\n| 10/3/2026 13:07:35 | Maddie Brickell | 2       | 16                   | 5.5           | Beer                 |\n| 10/3/2026 13:08:31 | Matt            | 2       | 16                   | 6.8           | Thirsty              |\n| 10/3/2026 13:09:05 | Kimberly Larkin | 2       | 16                   | 5.4           | Yes                  |\n| 10/3/2026 13:12:09 |                 | 2       | 16                   | 6.1           | Thirsty              |\n| 10/3/2026 13:15:38 | Tarra           | 2       | 10                   | 5.2           | Saddle sores (ow)    |\n| 10/3/2026 13:16:39 | Kiersten        | 2       | 16                   | 5.6           | Yes                  |\n| 10/3/2026 13:20:54 | Kelsey          | 2       | 16                   | 5.4           | Ready to roll        |\n\n### Table Columns:\n- \n  - range: A1:A27\n", "updatedAt": 1791048657306}</script>
 <script>
 (() => {
   "use strict";
   const ETHANOL = 0.789; // g/ml; AU standard drink = 10 g
   const SHEET_DOC = "config/sheet";
+  // The page's own markup, captured before anything renders, so the owner can
+  // republish it with fresh standings baked in (see bakeIntoPage).
+  const SRC = (() => { const h = document.body.innerHTML, i = h.indexOf("<!--bb-src-->"); return i >= 0 ? h.slice(i) : null; })();
+  const BAKED = (() => { try { return JSON.parse(document.getElementById("bb-data").textContent); } catch { return null; } })();
   const $ = (id) => document.getElementById(id);
   const state = { sheetId: null };
 
@@ -277,7 +282,7 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
       if (/^\s*\|.*\|\s*$/.test(l)) {
         if (/^\s*\|[\s:|-]+\|\s*$/.test(l)) continue;
         if (!cur) blocks.push(cur = []);
-        cur.push(l.trim().replace(/^\||\|$/g, "").split(/(?<!\\)\|/).map(c => c.trim().replace(/\\(.)/g, "$1")));
+        cur.push(l.trim().replace(/^\||\|$/g, "").replace(/\\\|/g, "\u0000").split("|").map(c => c.replace(/\u0000/g, "|").trim().replace(/\\(.)/g, "$1")));
       } else cur = null;
     }
     if (blocks.length) return blocks.find(b => locateHeader(b) >= 0) || blocks[0];
@@ -511,7 +516,23 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
     setMode("demo", "Showing example riders. Open Sheet settings to connect the drinks sheet.");
   }
 
-  async function refresh() {
+  // Republish the page with these standings embedded, so every viewer sees them,
+  // including people who open the link outside Claude. Only the owner/editors can.
+  const SKELETON = '<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>';
+  async function bakeIntoPage(data) {
+    if (!SRC || !inClaude()) return "unavailable";
+    const artifact = await window.claude.use("artifact");
+    if (!artifact) return "unavailable";
+    const blob = JSON.stringify(data).replace(/<\//g, "<\\/");
+    const re = /(<script type="application\/json" id="bb-data">)[\s\S]*?(<\/script>)/;
+    if (!re.test(SRC)) return "unavailable";
+    const html = SKELETON + SRC.replace(re, (_, open, close) => open + blob + close) + "</body></html>";
+    try { await artifact.publish(html); return "published"; }
+    catch (e) { return (e && e.code) || "failed"; }
+  }
+
+  async function refresh(ev) {
+    const byClick = !!ev;
     $("allow").hidden = true;
     if (!state.sheetId) return showDemo();
     const btn = $("refresh");
@@ -519,15 +540,23 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
     $("status").textContent = "Pouring fresh standings…";
     try {
       const text = inClaude() ? await readViaDrive(state.sheetId) : await readViaPublicCsv(state.sheetId);
-      show(text, Date.now(), "live");
-      snapshot = { text, updatedAt: Date.now(), sheetId: state.sheetId };
-      saveSnapshot(text);
+      const data = { sheetId: state.sheetId, text, updatedAt: Date.now() };
+      show(text, data.updatedAt, "live");
+      const changed = !snapshot || snapshot.text !== text;
+      snapshot = data;
+      if (changed) saveSnapshot(text);
+      // Publishing only ever follows a tap on Refresh, never a page load.
+      if (byClick && (!BAKED || BAKED.text !== text || BAKED.sheetId !== state.sheetId)) {
+        $("status").textContent += " · Saving for everyone…";
+        const r = await bakeIntoPage(data);
+        if (r !== "published") $("status").textContent = $("status").textContent.replace(" · Saving for everyone…", r === "not_writer" || r === "not_granted" ? " · Only the organiser can update the shared standings" : "");
+      }
     } catch (e) {
       const msg = (e && MCP_HELP[e.code]) || (e && e.message) || "Couldn't read the sheet.";
       if (e && NEEDS_ALLOW.includes(e.code)) $("allow").hidden = false;
       if (snapshot && snapshot.sheetId === state.sheetId) {
         show(snapshot.text, snapshot.updatedAt, "snap");
-        $("status").textContent += ` · Live refresh failed: ${msg}`;
+        if (byClick || e.code !== "no_drive") $("status").textContent += ` · Live refresh failed: ${msg}`;
       } else {
         setMode("err", msg);
       }
@@ -560,25 +589,29 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
   $("useDemo").addEventListener("click", async () => { await saveSheet(null); $("connectMsg").textContent = ""; refresh(); });
 
   // ---------- Boot ----------
-  // 1) the sheet this page belongs to, 2) the shared snapshot so everyone sees standings at once,
-  // 3) a live read through the viewer's Google Drive.
+  // 1) standings baked into the page (always available), 2) a newer shared snapshot,
+  // 3) a live read through the viewer's Google Drive, when this view has it.
   (async () => {
     const saved = local.get();
-    state.sheetId = saved === "demo" ? null : (saved || DEFAULT_SHEET);
+    state.sheetId = saved === "demo" ? null : (saved || (BAKED && BAKED.sheetId) || DEFAULT_SHEET);
     if (!state.sheetId) return showDemo();
     $("sheetUrl").value = `https://docs.google.com/spreadsheets/d/${state.sheetId}/edit`;
-    render([]);
-    setMode("snap", "Loading the latest standings…");
+    if (BAKED && BAKED.sheetId === state.sheetId && typeof BAKED.text === "string") {
+      snapshot = BAKED;
+      try { show(BAKED.text, BAKED.updatedAt, "snap"); } catch { render([]); }
+    } else {
+      render([]); setMode("snap", "Loading the latest standings…");
+    }
     if (await dbReady) {
       try {
         const cfg = await db.doc(SHEET_DOC).get();
         const id = cfg.exists ? (cfg.data() || {}).sheetId : null;
-        if (id && !saved) { state.sheetId = id; $("sheetUrl").value = `https://docs.google.com/spreadsheets/d/${id}/edit`; }
+        if (id && !saved && id !== state.sheetId) { state.sheetId = id; snapshot = null; $("sheetUrl").value = `https://docs.google.com/spreadsheets/d/${id}/edit`; }
       } catch {}
       try {
         const snap = await db.doc(SNAP_DOC).get();
         const d = snap.exists ? snap.data() : null;
-        if (d && typeof d.text === "string" && d.sheetId === state.sheetId) {
+        if (d && typeof d.text === "string" && d.sheetId === state.sheetId && (!snapshot || (d.updatedAt || 0) > (snapshot.updatedAt || 0))) {
           snapshot = d;
           show(d.text, d.updatedAt, "snap");
         }
