@@ -20,7 +20,7 @@ const aliases = {};
 for (const [word, kind] of Object.entries(A.ANIMAL_ALIASES)) (aliases[kind] = aliases[kind] || []).push(word);
 const cards = kinds.map(kind => `    <figure>
       <img src="svg/${kind}.svg" alt="${kind}" width="130" height="132">
-      <figcaption><strong>${kind === "pacman" ? "Pac-Man (no animal)" : kind}</strong>${aliases[kind] ? `<span>also: ${aliases[kind].sort().join(", ")}</span>` : ""}</figcaption>
+      <figcaption><strong>${kind === "pacman" ? "Pac-Man (no animal)" : A.labelFor(kind)}</strong>${aliases[kind] ? `<span>also: ${aliases[kind].sort().join(", ")}</span>` : ""}</figcaption>
     </figure>`).join("\n");
 
 fs.writeFileSync(path.join(root, "index.html"), `<!doctype html>

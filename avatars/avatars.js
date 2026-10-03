@@ -41,6 +41,7 @@ const ANIMALS = {
   raccoon: { base: "#8f969c", light: "#eef0f2", dark: "#2b2f36", inner: "#2b2f36", ear: "pointy", muzzle: "fox", extras: ["mask"] },
   sheep:   { base: "#5a5048", light: "#f5f1ea", dark: "#2a241f", inner: "#f7b8c4", ear: "side", muzzle: "sheep", extras: ["wool"] },
   unicorn: { base: "#ffffff", light: "#ffe3f1", dark: "#7a4fb5", inner: "#f7b8c4", ear: "pointy", muzzle: "horse", extras: ["horn", "unimane"] },
+  electricmouse: { label: "electric mouse", base: "#ffd93b", light: "#fff1a8", dark: "#1d1a16", inner: "#ffd93b", ear: "tipped", muzzle: "electric", extras: ["sparkcheeks", "bolttail"] },
   kangaroo: { base: "#c68642", light: "#ecc89a", dark: "#6e4423", inner: "#ecc89a", ear: "tall", muzzle: "dog", extras: ["joey"] },
   giraffe: { base: "#f2c14e", light: "#f8dc96", dark: "#9a5a26", inner: "#9a5a26", ear: "side", muzzle: "horse", extras: ["giraffespots", "ossicones"] },
   horse:   { base: "#9c6a3f", light: "#d8b48d", dark: "#3b2416", inner: "#3b2416", ear: "pointy", muzzle: "horse", extras: ["horsemane"] },
@@ -49,7 +50,7 @@ const ANIMAL_ALIASES = {
   kitty: "cat", kitten: "cat", puppy: "dog", pup: "dog", doggo: "dog", retriever: "dog", lab: "dog", labrador: "dog", corgi: "dog", pug: "dog",
   bunny: "rabbit", hare: "rabbit", grizzly: "bear", polar: "bear", piglet: "pig", hog: "pig", boar: "pig", bull: "cow", cattle: "cow",
   ape: "monkey", chimp: "monkey", gorilla: "monkey", toad: "frog", lamb: "sheep", ram: "sheep", pony: "horse", mice: "mouse", rat: "mouse",
-  roo: "kangaroo", wallaby: "kangaroo", joey: "kangaroo", giraffes: "giraffe", giraf: "giraffe", kitsune: "fox", husky: "wolf", trash: "raccoon", goose: "duck", chick: "duck",
+  pikachu: "electricmouse", pika: "electricmouse", electric: "electricmouse", sparky: "electricmouse", roo: "kangaroo", wallaby: "kangaroo", joey: "kangaroo", giraffes: "giraffe", giraf: "giraffe", kitsune: "fox", husky: "wolf", trash: "raccoon", goose: "duck", chick: "duck",
 };
 // "Red Panda" -> panda, "Golden Retriever" -> dog, "Cats" -> cat. Unknown -> null.
 function resolveAnimal(text) {
@@ -120,6 +121,7 @@ function avatarSvg(r, place, kind) {
     pointy: `<path d="M35 46 L31 16 L55 34 Z" fill="${earFill}" ${o}/><path d="M85 46 L89 16 L65 34 Z" fill="${earFill}" ${o}/><path d="M38 40 L36 24 L49 34 Z" fill="${a.inner}"/><path d="M82 40 L84 24 L71 34 Z" fill="${a.inner}"/>`,
     round: `<circle cx="38" cy="36" r="11" fill="${earFill}" ${o}/><circle cx="82" cy="36" r="11" fill="${earFill}" ${o}/><circle cx="38" cy="36" r="5.5" fill="${a.inner}"/><circle cx="82" cy="36" r="5.5" fill="${a.inner}"/>`,
     fluffy: `<circle cx="34" cy="40" r="15" fill="${a.base}" ${o}/><circle cx="86" cy="40" r="15" fill="${a.base}" ${o}/><circle cx="34" cy="41" r="8" fill="${a.inner}"/><circle cx="86" cy="41" r="8" fill="${a.inner}"/>`,
+    tipped: `<path d="M40 42 C30 30 26 14 24 4 C34 8 46 22 50 36 Z" fill="${a.base}" ${o}/><path d="M80 42 C90 30 94 14 96 4 C86 8 74 22 70 36 Z" fill="${a.base}" ${o}/><path d="M24 4 C27 10 29 15 31 20 C34 14 30 8 24 4 Z M96 4 C93 10 91 15 89 20 C86 14 90 8 96 4 Z" fill="${a.dark}" ${o}/>`,
     tall: `<path d="M40 44 C30 30 32 8 40 6 C48 8 50 30 48 40 Z" fill="${a.base}" ${o}/><path d="M80 44 C90 30 88 8 80 6 C72 8 70 30 72 40 Z" fill="${a.base}" ${o}/><path d="M41 36 C36 26 37 14 40 12 C44 14 45 26 45 34 Z" fill="${a.inner}"/><path d="M79 36 C84 26 83 14 80 12 C76 14 75 26 75 34 Z" fill="${a.inner}"/>`,
     big: `<circle cx="34" cy="34" r="15" fill="${a.base}" ${o}/><circle cx="86" cy="34" r="15" fill="${a.base}" ${o}/><circle cx="34" cy="34" r="9" fill="${a.inner}"/><circle cx="86" cy="34" r="9" fill="${a.inner}"/>`,
     long: `<ellipse cx="48" cy="14" rx="8" ry="22" fill="${a.base}" ${o}/><ellipse cx="72" cy="14" rx="8" ry="22" fill="${a.base}" ${o}/><ellipse cx="48" cy="16" rx="3.5" ry="15" fill="${a.inner}"/><ellipse cx="72" cy="16" rx="3.5" ry="15" fill="${a.inner}"/>`,
@@ -168,6 +170,7 @@ function avatarSvg(r, place, kind) {
     penguin: `<path d="M53 66 L67 66 L60 74 Z" fill="#f2a33a" ${o}/>`,
     duck: `<ellipse cx="60" cy="70" rx="15" ry="6.5" fill="#f28c28" ${o}/><path d="M47 70 H73" stroke="#1d1a16" stroke-width="1.6"/>`,
     sheep: `<ellipse cx="60" cy="68" rx="9" ry="7" fill="#3a332d"/><path d="M57 66 H63" stroke="#fff" stroke-width="1.6"/>`,
+    electric: `<path d="M58.5 65 H61.5 L60 67 Z" fill="#1d1a16" ${o}/><path d="M53 71 Q60 80 67 71 Q60 74 53 71 Z" fill="#c2453b" ${o}/>`,
     horse: `<ellipse cx="60" cy="78" rx="15" ry="10" fill="${a.light}" ${o}/><ellipse cx="55" cy="78" rx="2" ry="3" fill="${a.dark}"/><ellipse cx="65" cy="78" rx="2" ry="3" fill="${a.dark}"/>`,
   }[a.muzzle];
   const top = (x("horns") ? `<path d="M42 36 C38 28 40 22 46 22 C44 28 46 32 48 34 Z M78 36 C82 28 80 22 74 22 C76 28 74 32 72 34 Z" fill="#f6e7c1" ${o}/>` : "")
@@ -175,18 +178,22 @@ function avatarSvg(r, place, kind) {
     + (x("horn") ? `<path d="M56 32 L60 6 L64 32 Z" fill="#ffd76a" ${o}/><path d="M57 26 L63 24 M58 19 L62 17" stroke="#c98d3e" stroke-width="1.6"/>` : "")
     + (x("tuft") ? `<path d="M56 34 C54 26 60 24 60 32 C62 24 68 26 64 34 Z" fill="${a.base}" ${o}/>` : "");
   const joey = x("joey") ? `<path d="M64 132 V116 C64 110 92 110 92 116 V132 Z" fill="${a.light}" ${o}/><circle cx="78" cy="110" r="8" fill="${a.base}" ${o}/><path d="M72 104 L70 94 L76 102 Z M84 104 L86 94 L80 102 Z" fill="${a.base}" ${o}/><circle cx="75.5" cy="109" r="1.6" fill="#1d1a16"/><circle cx="80.5" cy="109" r="1.6" fill="#1d1a16"/><ellipse cx="78" cy="113" rx="2" ry="1.4" fill="#1d1a16"/>` : "";
+  const spark = x("sparkcheeks") ? `<circle cx="40" cy="69" r="6.5" fill="#e8463a" ${o}/><circle cx="80" cy="69" r="6.5" fill="#e8463a" ${o}/><path d="M30 64 L26 61 M29 70 L24 70 M90 64 L94 61 M91 70 L96 70" stroke="#ffb800" stroke-width="2" stroke-linecap="round"/>` : "";
+  const tail = x("bolttail") ? `<path d="M30 118 L14 104 L22 100 L6 80 L12 78 L2 58 L26 80 L18 84 L34 100 L26 102 L38 112 Z" fill="${a.base}" ${o}/><path d="M30 118 L24 112 L32 110 Z" fill="#9a5a26"/>` : "";
   const whiskers = x("whiskers") ? `<path d="M44 68 L32 66 M44 72 L32 74 M76 68 L88 66 M76 72 L88 74" stroke="#1d1a16" stroke-width="1.4" stroke-linecap="round"/>` : "";
-  const cheeks = ["frog", "owl", "penguin", "duck"].includes(a.muzzle) ? "" : `<circle cx="42" cy="68" r="4" fill="#ff7b7b" opacity=".35"/><circle cx="78" cy="68" r="4" fill="#ff7b7b" opacity=".35"/>`;
-  return `<svg class="avatar" viewBox="0 0 130 132" role="img" xmlns="http://www.w3.org/2000/svg" aria-label="Cartoon ${esc(kind)} for ${esc(r.name)}">
+  const cheeks = ["frog", "owl", "penguin", "duck", "electric"].includes(a.muzzle) ? "" : `<circle cx="42" cy="68" r="4" fill="#ff7b7b" opacity=".35"/><circle cx="78" cy="68" r="4" fill="#ff7b7b" opacity=".35"/>`;
+  return `<svg class="avatar" viewBox="0 0 130 132" role="img" xmlns="http://www.w3.org/2000/svg" aria-label="Cartoon ${esc(a.label || kind)} for ${esc(r.name)}">
+    ${tail}
     <path d="M16 132 C16 102 36 94 60 94 C84 94 104 102 104 132 Z" fill="${kit}" ${o}/>
     <path d="M52 95 L60 108 L68 95" fill="none" ${o}/><path d="M60 108 V132" ${o}/>
     <path d="M42 112 L36 132 M78 112 L84 132" stroke="#fff" stroke-width="3" opacity=".55"/>
     <rect x="52" y="80" width="16" height="16" fill="${a.base}" ${o}/>
-    ${behind}${ears}${head}${floppy}${marks}${top}${cheeks}${eyes}${muzzle}${whiskers}${joey}
+    ${behind}${ears}${head}${floppy}${marks}${top}${cheeks}${eyes}${muzzle}${spark}${whiskers}${joey}
     ${place >= 0 ? MEDAL_SVG(place, o) : ""}
     <g transform="rotate(-12 108 96)"><path d="M118 88 C126 88 126 104 118 104" fill="none" stroke="#1d1a16" stroke-width="3"/><rect x="96" y="82" width="22" height="30" rx="3" fill="#e9a23b" ${o}/><path d="M101 88 V106 M107 88 V106 M113 88 V106" stroke="#fff" stroke-width="1.6" opacity=".45"/><path d="M94 84 C94 76 100 74 104 77 C106 72 114 72 116 77 C122 75 124 82 120 85 Z" fill="#fffaf0" ${o}/></g>
   </svg>`;
 }
-return { ANIMALS, ANIMAL_ALIASES, resolveAnimal, animalFor, draw: avatarSvg, hashName };
+const labelFor = (kind) => kind === "pacman" ? "Pac-Man" : (ANIMALS[kind] && ANIMALS[kind].label) || kind;
+return { labelFor, ANIMALS, ANIMAL_ALIASES, resolveAnimal, animalFor, draw: avatarSvg, hashName };
 })();
 if (typeof module !== "undefined") module.exports = BikeBrewsAvatars;
