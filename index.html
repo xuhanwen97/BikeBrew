@@ -77,6 +77,12 @@ body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f
 .jersey header svg { width: 56px; height: 56px; }
 .jersey .jname { font-family: var(--f-data); text-transform: uppercase; letter-spacing: .12em; font-size: 13px; font-weight: 700; color: var(--muted); }
 .jersey .rule { font-size: 14px; color: var(--muted); }
+.formula { margin: 0 18px 12px; padding: 8px 12px; border-radius: 10px; background: var(--bg); display: grid; gap: 2px; }
+.formula span, .gc-key dt { font-family: var(--f-data); font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.formula code, .gc-key code { font-family: var(--f-data); font-size: 15px; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
+.gc-key { margin: 14px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 8px 16px; }
+.gc-key div { min-width: 0; padding: 8px 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); }
+.gc-key dd { margin: 2px 0 0; }
 .jersey .leader { font-family: var(--f-display); font-size: clamp(22px, 3.2vw, 28px); line-height: 1.1; margin: 2px 0; overflow-wrap: anywhere; }
 .jersey .leadval { font-family: var(--f-data); font-weight: 700; font-size: 18px; font-variant-numeric: tabular-nums; }
 .jersey ol { list-style: none; margin: 0; padding: 4px 18px 16px; display: grid; gap: 0; border-top: 1px solid var(--line); }
@@ -197,20 +203,28 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
 
   <section class="gc">
     <h2>General Classification</h2>
-    <p class="sub" id="gcSub">Ranked by total alcohol units. Gaps are shown to the rider ahead in yellow.</p>
+    <p class="sub" id="gcSub">Ranked by total alcohol units. Gaps are measured to the leader in yellow. Tap Drinks to see a rider’s rows from the sheet.</p>
     <div class="tablebox">
       <table>
         <thead><tr><th>Pos</th><th>Rider</th><th>Total AU</th><th>Drinks</th><th>Volume</th><th>Avg ABV</th></tr></thead>
         <tbody id="gcBody"></tbody>
       </table>
     </div>
+    <dl class="gc-key">
+      <div><dt>Total AU</dt><dd><code>Σ (fl oz × ABV%) for every counted drink</code></dd></div>
+      <div><dt>Gap</dt><dd><code>Leader's Total AU − rider's Total AU</code></dd></div>
+      <div><dt>Drinks</dt><dd><code>Number of counted rows for the rider</code></dd></div>
+      <div><dt>Volume</dt><dd><code>Σ fl oz for every counted drink</code></dd></div>
+      <div><dt>Avg ABV (volume-weighted)</dt><dd><code>Σ (fl oz × ABV%) ÷ Σ fl oz = Total AU ÷ Volume</code></dd></div>
+      <div><dt>Each drink's AU</dt><dd><code>fl oz × ABV%, e.g. 12 oz × 5 = 60 AU</code></dd></div>
+    </dl>
   </section>
 
   <div class="issues" id="issues" role="status" hidden></div>
 
   <footer class="foot">
     <div><strong>How AU is scored.</strong> Alcohol units (AU) are fluid ounces × ABV%. A 12 oz beer at 5% is 60 AU.</div>
-    <div><strong>Jerseys.</strong> Yellow: most total AU. Green: highest average ABV. Polka dot: most total volume, the toughest climb. White: lowest average ABV. Average ABV is weighted by volume, so a pint counts more than a taster.</div>
+    <div><strong>Jerseys.</strong> Yellow: most total AU. Green: highest average ABV. Polka dot: most total fluid ounces, the toughest climb. White: lowest average ABV. Average ABV is weighted by volume, so a 16 oz pour counts four times as much as a 4 oz taster. Rows that can't be read (no name, or a volume or ABV that isn't a number) aren't counted in any stat.</div>
   </footer>
 </div>
 
@@ -559,7 +573,8 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
   // ---------- Rendering ----------
   const fmt = (n, d = 1) => isFinite(n) ? n.toFixed(d) : "–";
   const fmtAu = (n) => isFinite(n) ? String(+n.toFixed(1)) : "–";
-  const fmtVol = (ml) => isFinite(ml) && ml > 0 ? (ml / 1000).toFixed(2) + " L" : "–";
+  const oz = (ml) => ml / ML_PER_OZ;
+  const fmtVol = (ml) => isFinite(ml) && ml > 0 ? +oz(ml).toFixed(1) + " oz" : "–";
   const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
   const JERSEY_SVG = {
@@ -570,12 +585,16 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
   };
   const JERSEYS = [
     { id: "yellow", cls: "j-yellow", title: "Maillot Jaune", rule: "Most total AU",
+      formula: "Total AU = Σ (fl oz × ABV%) for every counted drink",
       sort: (a, b) => b.au - a.au, ok: r => r.au > 0, val: r => fmtAu(r.au) + " AU", gap: (r, l) => "+" + fmtAu(l.au - r.au) },
     { id: "green", cls: "j-green", title: "Maillot Vert", rule: "Highest average ABV",
+      formula: "Avg ABV = Σ (fl oz × ABV%) ÷ Σ fl oz = Total AU ÷ Total oz",
       sort: (a, b) => b.avgAbv - a.avgAbv, ok: r => isFinite(r.avgAbv), val: r => fmt(r.avgAbv, 2) + "%", gap: (r, l) => "−" + fmt(l.avgAbv - r.avgAbv, 2) },
-    { id: "polka", cls: "j-polka", title: "Maillot à Pois", rule: "Toughest volume: most litres",
-      sort: (a, b) => b.ml - a.ml, ok: r => r.ml > 0, val: r => fmtVol(r.ml), gap: (r, l) => "+" + ((l.ml - r.ml) / 1000).toFixed(2) },
+    { id: "polka", cls: "j-polka", title: "Maillot à Pois", rule: "Toughest volume: most fluid ounces",
+      formula: "Total volume = Σ fl oz for every counted drink",
+      sort: (a, b) => b.ml - a.ml, ok: r => r.ml > 0, val: r => fmtVol(r.ml), gap: (r, l) => "+" + +oz(l.ml - r.ml).toFixed(1) },
     { id: "white", cls: "j-white", title: "Maillot Blanc", rule: "Lowest average ABV",
+      formula: "Avg ABV = Σ (fl oz × ABV%) ÷ Σ fl oz = Total AU ÷ Total oz",
       sort: (a, b) => a.avgAbv - b.avgAbv, ok: r => isFinite(r.avgAbv), val: r => fmt(r.avgAbv, 2) + "%", gap: (r, l) => "+" + fmt(r.avgAbv - l.avgAbv, 2) },
   ];
 
@@ -603,6 +622,7 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
           <div class="leader">${lead ? esc(lead.name) : "Up for grabs"}</div>
           <div class="leadval">${lead ? j.val(lead) : ""}</div>
           <div class="rule">${j.rule}</div></div></header>
+        <div class="formula"><span>Formula</span><code>${j.formula}</code></div>
         ${rest ? `<ol>${rest}</ol>` : `<div class="empty">${lead ? "No challengers yet." : "No qualifying drinks logged yet."}</div>`}
       </article>`;
     }).join("");

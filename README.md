@@ -10,8 +10,8 @@ Also on claude.ai: https://claude.ai/artifact/1A8iqA15we3wFGWQZywv1M (viewers ne
 | Jersey | Award | How it's computed |
 |---|---|---|
 | Yellow (Maillot Jaune) | Most total AU | Sum of alcohol units per rider |
-| Green (Maillot Vert) | Highest average ABV | Volume-weighted: Σ(ABV × ml) / Σ ml |
-| Polka dot (Maillot à Pois) | Toughest volume | Most total litres consumed |
+| Green (Maillot Vert) | Highest average ABV | Volume-weighted: Σ(fl oz × ABV%) ÷ Σ fl oz |
+| Polka dot (Maillot à Pois) | Toughest volume | Most total fl oz: Σ fl oz |
 | White (Maillot Blanc) | Lowest average ABV | Volume-weighted, lowest wins |
 
 **AU (alcohol units):** fluid ounces × ABV%.
