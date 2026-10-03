@@ -149,6 +149,29 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
   .sub-m { display: block; color: var(--muted); font-family: var(--f-data); font-size: 13px; margin-top: 1px; }
   td.au .gap { display: block; font-size: 13px; font-weight: 500; }
 }
+/* Tabs */
+.tabs { display: inline-flex; padding: 3px; gap: 2px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); }
+.tab { appearance: none; border: 0; cursor: pointer; background: transparent; color: var(--muted); font: 700 13px/1 var(--f-data);
+  letter-spacing: .1em; text-transform: uppercase; padding: 9px 16px; border-radius: 999px; min-height: 36px; }
+.tab:hover { color: var(--ink); }
+.tab[aria-selected="true"] { background: var(--ink); color: var(--bg); }
+.tab:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+.panel { display: grid; gap: 28px; }
+.panel[hidden] { display: none; }
+@media (max-width: 560px) { .panel { gap: 20px; } .tabs { width: 100%; } .tab { flex: 1; } }
+
+/* All entries */
+.entries h2 { font-family: var(--f-display); font-weight: 400; font-size: 28px; margin: 0; }
+.entries { gap: 4px; }
+.entries .sub { color: var(--muted); margin: 0 0 12px; font-size: 14px; }
+.entries-box { overflow-x: auto; background: var(--surface); border-radius: 14px; box-shadow: var(--shadow); }
+.entries-t { min-width: 0; width: 100%; }
+.entries-t th, .entries-t td { display: table-cell; width: auto; text-align: left; white-space: nowrap; padding: 9px 12px; font-size: 14px; }
+.entries-t th { font-size: 11px; }
+.entries-t .num { text-align: right; font-family: var(--f-data); font-weight: 700; }
+.entries-t .rowno { color: var(--muted); font-family: var(--f-data); }
+.entries-t tr.raw-bad td { color: var(--polka); }
+
 /* Per-rider raw sheet rows */
 .rider { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
 .raw-btn { appearance: none; cursor: pointer; font: 600 12px/1 var(--f-data); letter-spacing: .08em; text-transform: uppercase;
@@ -195,9 +218,14 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
   <div class="road" aria-hidden="true"></div>
 
   <div class="bar">
-    <span class="pill snap">Standings</span>
+    <div class="tabs" role="tablist" aria-label="View">
+      <button class="tab" role="tab" id="tab-standings" aria-controls="panel-standings" aria-selected="true" type="button">Standings</button>
+      <button class="tab" role="tab" id="tab-entries" aria-controls="panel-entries" aria-selected="false" tabindex="-1" type="button">All entries</button>
+    </div>
     <span id="status" class="status">Loading standings…</span>
   </div>
+
+  <div class="panel" id="panel-standings" role="tabpanel" aria-labelledby="tab-standings">
 
   <section class="jerseys" id="jerseys" aria-label="Jersey leaders"></section>
 
@@ -221,6 +249,13 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
   </section>
 
   <div class="issues" id="issues" role="status" hidden></div>
+  </div>
+
+  <section class="panel entries" id="panel-entries" role="tabpanel" aria-labelledby="tab-entries" hidden>
+    <h2>All entries</h2>
+    <p class="sub" id="entriesSub">Every row in the sheet, newest first, with the AU each scored.</p>
+    <div class="entries-box"><table class="entries-t" id="entriesTable"></table></div>
+  </section>
 
   <footer class="foot">
     <div><strong>How AU is scored.</strong> Alcohol units (AU) are fluid ounces × ABV%. A 12 oz beer at 5% is 60 AU.</div>
@@ -586,11 +621,12 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
     const skipped = [];
     const uncounted = new Map(); // rider key -> rows we couldn't score
     let stop = NaN;
+    const all = []; // every non-blank sheet row: { row, cells, au, note }
     rows.slice(hi + 1).forEach((r, k) => {
       const sheetRow = hi + k + 2;
       if (!r.some(c => String(c).trim())) return;
       const name = String(r[iName] ?? "").trim();
-      if (!name) { skipped.push(`row ${sheetRow}: no name`); return; }
+      if (!name) { skipped.push(`row ${sheetRow}: no name`); all.push({ row: sheetRow, cells: r, au: NaN, note: "No name" }); return; }
       const key = name.toLowerCase().replace(/\s+/g, " ");
       const ml = iVol >= 0 ? toMl(r[iVol] ?? "", headers[iVol]) : NaN;
       const abv = iAbv >= 0 ? toAbv(r[iAbv] ?? "") : NaN;
@@ -599,6 +635,7 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
       if (!isFinite(au)) {
         const bad = !isFinite(ml) ? `volume "${r[iVol] ?? ""}"` : `ABV "${r[iAbv] ?? ""}"`;
         skipped.push(`row ${sheetRow} (${name}): ${bad}`);
+        all.push({ row: sheetRow, cells: r, au: NaN, note: `Unreadable ${bad.split(" ")[0]}` });
         if (!uncounted.has(key)) uncounted.set(key, []);
         uncounted.get(key).push({ row: sheetRow, cells: r, au: NaN });
         return;
@@ -607,6 +644,7 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
       const rd = riders.get(key) || { name, drinks: 0, au: 0, ml: 0, abvMl: 0, entries: [] };
       rd.drinks++; rd.au += au;
       rd.entries.push({ row: sheetRow, cells: r, au });
+      all.push({ row: sheetRow, cells: r, au, note: "" });
       if (isFinite(ml)) { rd.ml += ml; if (isFinite(abv)) rd.abvMl += abv * ml; }
       riders.set(key, rd);
     });
@@ -615,7 +653,7 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
       if (rd) rd.entries = [...rd.entries, ...extra].sort((a, b) => a.row - b.row);
     }
     const list = [...riders.values()].map(r => ({ ...r, avgAbv: r.ml > 0 ? r.abvMl / r.ml : NaN }));
-    return { list, skipped, stop, headers: rows[hi], iName };
+    return { list, skipped, stop, headers: rows[hi], iName, all };
   }
 
   // ---------- Rendering ----------
@@ -688,6 +726,17 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
     }).join("") : `<tr><td colspan="6" style="display:table-cell;text-align:center;color:var(--muted);padding:24px">No drinks logged yet. The first pour takes yellow.</td></tr>`;
   }
 
+  function renderEntries(all, headers) {
+    const head = `<th>Row</th>` + headers.map(h => `<th>${esc(h)}</th>`).join("") + `<th class="num">AU</th>`;
+    const body = [...all].reverse().map(e => `<tr${e.note ? ' class="raw-bad"' : ""}><td class="rowno">${e.row}</td>` +
+      headers.map((h, i) => `<td>${esc(e.cells[i] ?? "")}</td>`).join("") +
+      `<td class="num">${e.note ? esc(e.note) : fmtAu(e.au)}</td></tr>`).join("");
+    $("entriesTable").innerHTML = `<thead><tr>${head}</tr></thead><tbody>${body}</tbody>`;
+    const bad = all.filter(e => e.note).length;
+    $("entriesSub").textContent = `${all.length} rows in the sheet, newest first, with the AU each scored.` +
+      (bad ? ` ${bad} not counted, shown in red.` : "");
+  }
+
   function showIssues(notes) {
     const box = $("issues");
     box.hidden = !notes.length;
@@ -710,6 +759,27 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
     row.hidden = !open;
   });
 
+  // Tabs. "#entries" in the link opens the All entries tab.
+  const TABS = ["standings", "entries"];
+  function selectTab(name, focus) {
+    for (const t of TABS) {
+      const on = t === name;
+      const tab = $("tab-" + t);
+      tab.setAttribute("aria-selected", String(on));
+      tab.tabIndex = on ? 0 : -1;
+      $("panel-" + t).hidden = !on;
+      if (on && focus) tab.focus();
+    }
+    try { history.replaceState(null, "", name === "standings" ? location.pathname + location.search : "#entries"); } catch {}
+  }
+  for (const t of TABS) $("tab-" + t).addEventListener("click", () => selectTab(t));
+  document.querySelector(".tabs").addEventListener("keydown", (ev) => {
+    if (ev.key !== "ArrowRight" && ev.key !== "ArrowLeft") return;
+    const cur = TABS.findIndex(t => $("tab-" + t).getAttribute("aria-selected") === "true");
+    selectTab(TABS[(cur + (ev.key === "ArrowRight" ? 1 : TABS.length - 1)) % TABS.length], true);
+  });
+  if (location.hash === "#entries") selectTab("entries");
+
   // ---------- Boot: standings are baked into the page by tools/update_data.py ----------
   let data = null;
   try { data = JSON.parse($("bb-data").textContent); } catch {}
@@ -719,8 +789,9 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
     $("status").textContent = "No standings yet.";
   } else {
     try {
-      const { list, skipped, stop, headers, iName } = score(rows);
+      const { list, skipped, stop, headers, iName, all } = score(rows);
       render(list, headers, iName);
+      renderEntries(all, headers);
       const drinks = list.reduce((s, r) => s + r.drinks, 0);
       // Latest form timestamp, shown as the sheet wrote it (event local time).
       const hdr = rows[locateHeader(rows)].map(h => String(h).toLowerCase());

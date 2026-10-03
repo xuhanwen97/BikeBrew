@@ -29,6 +29,7 @@ Google Form ──► Google Sheet (responses) ──► Claude reads it ──�
 - **Refreshing:** ask Claude to refresh. It reads the sheet through Google Drive, saves the text to a file, runs `python3 tools/update_data.py <file>` to bake the rows into `index.html`, commits and pushes (GitHub Pages redeploys in about a minute) and republishes the claude.ai copy.
 - `update_data.py` accepts Drive's markdown-table export or a CSV/TSV download of the sheet, and warns if fewer rows came through than the sheet holds.
 - The page scores the rows in the browser and lists rows it couldn't count (missing name, unreadable volume or ABV) so they can be fixed in the sheet.
+- Two tabs: **Standings** (jerseys + General Classification) and **All entries** (every sheet row, newest first, with each row's AU). Link straight to the second tab with `#entries`.
 
 ## Google Form setup
 
