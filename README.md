@@ -19,7 +19,7 @@ Also on claude.ai: https://claude.ai/artifact/1A8iqA15we3wFGWQZywv1M (viewers ne
 
 **Qualifying:** a rider needs at least 3 counted drinks to hold a jersey or a place in the General Classification. Until then they're listed below a "Not yet qualified" line, flagged with their count (e.g. 2/3).
 
-**Yellow jersey podium:** the top three qualified riders on total AU stand on a 2-1-3 podium with cartoon avatars generated from their display names (same look on every refresh; the leader wears yellow).
+**Yellow jersey podium:** at the top of the page, the top three qualified riders on total AU stand on a 2-1-3 podium as cartoon animals in cycling kit (the leader in yellow). Each rider's animal comes from the **Animal** column of the Rider Names sheet (free text: "Red Panda" → panda, "Golden Retriever" → dog). Drawable: cat, dog, fox, wolf, bear, panda, koala, mouse, rabbit, pig, cow, lion, tiger, monkey, frog, owl, penguin, duck, raccoon, sheep, horse, unicorn. Riders with no animal get one picked from their display name (no repeats on the podium); animals the page can't draw are flagged under the standings.
 
 **Stage wins:** each stop is a stage, won by the rider with the most AU at that stop (ties share it). Any rider can win a stage; the count shows next to their name in the General Classification.
 
@@ -38,7 +38,7 @@ Google Form ──► Google Sheet (responses) ──► Claude reads it ──�
 - **What a refresh does:** It reads the sheet through Google Drive, saves the text to a file, runs `python3 tools/update_data.py <file>` to bake the rows into `index.html`, commits and pushes (GitHub Pages redeploys in about a minute) and republishes the claude.ai copy.
 - `update_data.py` accepts Drive's markdown-table export or a CSV/TSV download of the sheet, and warns if fewer rows came through than the sheet holds.
 - The page scores the rows in the browser and lists rows it couldn't count (missing name, unreadable volume or ABV) so they can be fixed in the sheet.
-- **Display names:** the [Rider Names sheet](https://docs.google.com/spreadsheets/d/10ar6o290JM09kW4Q1JN7Huq1y5BuSH5xOySc84neheQ/edit) maps each form name to a display name. The page groups riders by display name (several form names can map to one person) and shows the form name(s) under it. Form names missing from that sheet are flagged under the standings.
+- **Display names:** the [Rider Names sheet](https://docs.google.com/spreadsheets/d/10ar6o290JM09kW4Q1JN7Huq1y5BuSH5xOySc84neheQ/edit) maps each form name to a display name, plus an optional Animal column for the podium avatars. The page groups riders by display name (several form names can map to one person) and shows the form name(s) under it. Form names missing from that sheet are flagged under the standings.
 - Two tabs: **Standings** (jerseys + General Classification) and **All entries** (every sheet row, newest first, with each row's AU). Link straight to the second tab with `#entries`.
 
 ## Google Form setup

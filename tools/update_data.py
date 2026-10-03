@@ -6,7 +6,8 @@ Exit code 3 (prints UNCHANGED) when the page already has exactly these rows.
 
 <sheet.txt> is the sheet's text as Google Drive exports it (a markdown table),
 or a CSV/TSV export. The rows replace the JSON inside <script id="bb-data">.
-<names.txt> is the "Bikes & Brews Rider Names" sheet (Form name -> Display name),
+<names.txt> is the "Bikes & Brews Rider Names" sheet (Form name -> Display name, plus an
+optional Animal column for the podium avatars),
 in the same formats; without it the names already in the page are kept. Pass --names
 more than once (Rider Names sheet first, then the display-name form's responses):
 later files win for the same form name, and so do later rows within a file.
@@ -43,20 +44,22 @@ def read_names(src):
     h = [c.lower() for c in rows[header]]
     i_form = next(i for i, c in enumerate(h) if "form" in c)
     i_disp = next(i for i, c in enumerate(h) if "display" in c)
+    i_animal = next((i for i, c in enumerate(h) if "animal" in c), None)
     out = []
     for r in rows[header + 1:]:
         form = r[i_form].strip() if i_form < len(r) else ""
         disp = r[i_disp].strip() if i_disp < len(r) else ""
+        animal = r[i_animal].strip() if i_animal is not None and i_animal < len(r) else ""
         if form:
-            out.append([form, disp or form])
+            out.append([form, disp or form, animal])
     return out
 
 
 def merge_names(sources):
     merged = {}
     for src in sources:
-        for form, disp in read_names(src):
-            merged[" ".join(form.lower().split())] = [form, disp[:40]]
+        for form, disp, animal in read_names(src):
+            merged[" ".join(form.lower().split())] = [form, disp[:40], animal[:30]]
     return list(merged.values())
 
 

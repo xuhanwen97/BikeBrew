@@ -196,6 +196,7 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
 .step-1 .avatar { width: min(100%, 150px); }
 .step-name { font-family: var(--f-display); font-size: clamp(15px, 2.4vw, 20px); line-height: 1.15; overflow-wrap: anywhere; margin-top: 4px; }
 .step .formname { font-size: 12px; }
+.step-animal { font: 600 12px/1.2 var(--f-data); letter-spacing: .1em; text-transform: uppercase; color: var(--amber); }
 .step-au { font: 700 16px/1.3 var(--f-data); font-variant-numeric: tabular-nums; }
 .step-au .gap { color: var(--muted); font-weight: 600; }
 .block { width: 100%; margin-top: 8px; border-radius: 10px 10px 0 0; display: grid; place-items: start center; padding-top: 10px;
@@ -277,6 +278,12 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
   </header>
   <div class="road" aria-hidden="true"></div>
 
+  <section class="podium-sec" aria-labelledby="podiumTitle">
+    <h2 id="podiumTitle">Yellow jersey podium</h2>
+    <p class="sub">The top three qualified riders on total AU, as their spirit animals.</p>
+    <div class="podium" id="podium"></div>
+  </section>
+
   <div class="bar">
     <div class="tabs" role="tablist" aria-label="View">
       <button class="tab" role="tab" id="tab-standings" aria-controls="panel-standings" aria-selected="true" type="button">Standings</button>
@@ -290,12 +297,6 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
   <div class="panel" id="panel-standings" role="tabpanel" aria-labelledby="tab-standings">
 
   <section class="jerseys" id="jerseys" aria-label="Jersey leaders"></section>
-
-  <section class="podium-sec" aria-labelledby="podiumTitle">
-    <h2 id="podiumTitle">Yellow jersey podium</h2>
-    <p class="sub">The top three qualified riders on total AU.</p>
-    <div class="podium" id="podium"></div>
-  </section>
 
   <section class="stages" aria-labelledby="stagesTitle">
     <h2 id="stagesTitle">Stage wins</h2>
@@ -341,7 +342,7 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
 
 <script type="application/json" id="bb-data">
 {
-"updatedAt": 1791057300195,
+"updatedAt": 1791058300689,
 "rows": [
 [
 "Timestamp",
@@ -803,63 +804,78 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
 "names": [
 [
 "Matt",
-"Matt"
+"Matt",
+""
 ],
 [
 "Ari",
-"Ari"
+"Ari",
+""
 ],
 [
 "Jack Sebok",
-"Jack"
+"Jack",
+""
 ],
 [
 "Michael",
-"Michael"
+"Michael",
+""
 ],
 [
 "Sucher",
-"Sucher"
+"Sucher",
+""
 ],
 [
 "Viktor",
-"Viktor"
+"Viktor",
+""
 ],
 [
 "Kimberly Larkin",
-"Kimberly Larkin"
+"Kimberly Larkin",
+""
 ],
 [
 "Maddie Brickell",
-"Maddie Brickell"
+"Maddie Brickell",
+""
 ],
 [
 "Kiersten",
-"Kiersten"
+"Kiersten",
+""
 ],
 [
 "Teags",
-"Teags"
+"Teags",
+""
 ],
 [
 "Sherry",
-"Sherry"
+"Sherry",
+""
 ],
 [
 "Tarra",
-"Tarra"
+"Tarra",
+""
 ],
 [
 "Charles Warden",
-"Charles Warden"
+"Charles Warden",
+""
 ],
 [
 "Kelsey",
-"Kelsey"
+"Kelsey",
+""
 ],
 [
 "Kelly",
-"Kelly"
+"Kelly",
+""
 ]
 ]
 }
@@ -912,6 +928,7 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
   const norm = (n) => String(n).trim().toLowerCase().replace(/\s+/g, " ");
   function score(rows, names = []) {
     const display = new Map(names.filter(([f]) => String(f || "").trim()).map(([f, d]) => [norm(f), String(d || "").trim() || String(f).trim()]));
+    const animalOf = new Map(names.filter(([f, , a]) => String(f || "").trim() && String(a || "").trim()).map(([f, , a]) => [norm(f), String(a).trim()]));
     const unmapped = new Set();
     const hi = locateHeader(rows);
     if (hi < 0) throw new Error("Couldn't find the header row. The sheet needs a name column and an ABV column.");
@@ -958,6 +975,7 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
       const stopNo = iStop >= 0 ? parseFloat(r[iStop]) : NaN;
       if (isFinite(stopNo)) rd.stageAu.set(stopNo, (rd.stageAu.get(stopNo) || 0) + au);
       rd.forms.add(name);
+      if (!rd.animal && animalOf.has(norm(name))) rd.animal = animalOf.get(norm(name));
       rd.drinks++; rd.au += au;
       rd.entries.push({ row: sheetRow, cells: r, au });
       all.push({ row: sheetRow, cells: r, au, note: "", shown });
@@ -1020,57 +1038,135 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
   }
 
   const qualified = (r) => r.drinks >= MIN_DRINKS;
-  // Cartoon avatars, generated from the display name so each rider keeps the same look.
+  // Cartoon animal avatars. The animal comes from the Rider Names sheet's Animal column;
+  // riders without one get an animal picked from their display name.
   function hashName(str) {
     let h = 2166136261;
     for (const ch of String(str).toLowerCase()) { h ^= ch.codePointAt(0); h = Math.imul(h, 16777619); }
     return h >>> 0;
   }
-  const SKIN = ["#f6d3b3", "#eebf98", "#d9a274", "#b97d52", "#8d5a3b", "#5f3b26"];
-  const HAIR = ["#2a1d15", "#5a3a22", "#8a5a2b", "#c98d3e", "#e3c06f", "#b0472a", "#6b6f78", "#1f2b4a"];
   const KIT = ["#1f6fb5", "#d42a2a", "#1b8a4c", "#6d3fb2", "#e2701c", "#14808a", "#c2185b"];
   const MEDAL = ["#f2c200", "#c9ced3", "#c98a4b"];
-  function avatarSvg(name, place) {
-    let h = hashName(name);
-    const pick = (arr) => { const v = arr[h % arr.length]; h = (Math.floor(h / arr.length) ^ (h << 7)) >>> 0; return v; };
-    const skin = pick(SKIN), hair = pick(HAIR), kit = place === 0 ? "#f2c200" : pick(KIT), cap = pick(KIT);
-    const hairStyle = h % 5; h = (h >>> 3) ^ 0x9e37;
-    const head = h % 3; h = h >>> 2;       // 0 cap, 1 helmet, 2 bare
-    const shades = h % 3 === 0; h = h >>> 2;
-    const tache = h % 4 === 0; h = h >>> 2;
-    const grin = h % 2 === 0;
+  // base, light (muzzle/belly), dark (accents), inner ear, ear style, muzzle style, extras
+  const ANIMALS = {
+    cat:     { base: "#f2a65a", light: "#fff4e6", dark: "#c46f2a", inner: "#f7b8c4", ear: "pointy", muzzle: "cat", extras: ["whiskers", "stripes"] },
+    dog:     { base: "#c98b4f", light: "#f6e3c8", dark: "#6e4423", inner: "#6e4423", ear: "floppy", muzzle: "dog", extras: ["tongue"] },
+    fox:     { base: "#e8732c", light: "#fff6ec", dark: "#2a1d15", inner: "#fff6ec", ear: "pointy", muzzle: "fox", extras: [] },
+    wolf:    { base: "#8c949c", light: "#eef0f2", dark: "#3d4248", inner: "#5f666d", ear: "pointy", muzzle: "fox", extras: [] },
+    bear:    { base: "#8a5a3b", light: "#d9b48f", dark: "#3b2416", inner: "#d9b48f", ear: "round", muzzle: "bear", extras: [] },
+    panda:   { base: "#fbfbfb", light: "#fbfbfb", dark: "#1d1a16", inner: "#1d1a16", ear: "round", muzzle: "bear", extras: ["patches"], earFill: "#1d1a16" },
+    koala:   { base: "#9aa3ab", light: "#e4e7ea", dark: "#2f3337", inner: "#f0e6ea", ear: "fluffy", muzzle: "koala", extras: [] },
+    mouse:   { base: "#b9bec4", light: "#e9ebee", dark: "#4b5057", inner: "#f7b8c4", ear: "big", muzzle: "mouse", extras: ["whiskers"] },
+    rabbit:  { base: "#f1ece4", light: "#ffffff", dark: "#6b5e52", inner: "#f7b8c4", ear: "long", muzzle: "rabbit", extras: ["whiskers"] },
+    pig:     { base: "#f4a7b9", light: "#f9c9d4", dark: "#b8566f", inner: "#e27f98", ear: "pointy", muzzle: "pig", extras: [] },
+    cow:     { base: "#fbfbfb", light: "#f7b8c4", dark: "#1d1a16", inner: "#f7b8c4", ear: "side", muzzle: "cow", extras: ["spots", "horns"] },
+    lion:    { base: "#e0a446", light: "#fbe3b4", dark: "#6b3d16", inner: "#b5651d", ear: "round", muzzle: "cat", extras: ["mane", "whiskers"] },
+    tiger:   { base: "#f08a24", light: "#fff6ec", dark: "#1d1a16", inner: "#fff6ec", ear: "round", muzzle: "cat", extras: ["tigerstripes", "whiskers"] },
+    monkey:  { base: "#7b4f2c", light: "#e8c39e", dark: "#3b2416", inner: "#e8c39e", ear: "monkey", muzzle: "monkey", extras: [] },
+    frog:    { base: "#6cc04a", light: "#c8eab3", dark: "#2e6a1d", inner: "#6cc04a", ear: "none", muzzle: "frog", extras: [] },
+    owl:     { base: "#8d6e63", light: "#e9d8c4", dark: "#4e342e", inner: "#4e342e", ear: "tufts", muzzle: "owl", extras: [] },
+    penguin: { base: "#2b2f36", light: "#ffffff", dark: "#1d1a16", inner: "#2b2f36", ear: "none", muzzle: "penguin", extras: [] },
+    duck:    { base: "#ffd84d", light: "#fff3b8", dark: "#e2701c", inner: "#ffd84d", ear: "none", muzzle: "duck", extras: ["tuft"] },
+    raccoon: { base: "#8f969c", light: "#eef0f2", dark: "#2b2f36", inner: "#2b2f36", ear: "pointy", muzzle: "fox", extras: ["mask"] },
+    sheep:   { base: "#5a5048", light: "#f5f1ea", dark: "#2a241f", inner: "#f7b8c4", ear: "side", muzzle: "sheep", extras: ["wool"] },
+    unicorn: { base: "#ffffff", light: "#ffe3f1", dark: "#7a4fb5", inner: "#f7b8c4", ear: "pointy", muzzle: "horse", extras: ["horn", "unimane"] },
+    horse:   { base: "#9c6a3f", light: "#d8b48d", dark: "#3b2416", inner: "#3b2416", ear: "pointy", muzzle: "horse", extras: ["horsemane"] },
+  };
+  const ANIMAL_ALIASES = {
+    kitty: "cat", kitten: "cat", puppy: "dog", pup: "dog", doggo: "dog", retriever: "dog", lab: "dog", labrador: "dog", corgi: "dog", pug: "dog",
+    bunny: "rabbit", hare: "rabbit", grizzly: "bear", polar: "bear", piglet: "pig", hog: "pig", boar: "pig", bull: "cow", cattle: "cow",
+    ape: "monkey", chimp: "monkey", gorilla: "monkey", toad: "frog", lamb: "sheep", ram: "sheep", pony: "horse", mice: "mouse", rat: "mouse",
+    kitsune: "fox", husky: "wolf", trash: "raccoon", goose: "duck", chick: "duck",
+  };
+  const POOL = ["cat", "dog", "fox", "bear", "panda", "koala", "rabbit", "pig", "lion", "tiger", "monkey", "frog", "owl", "penguin", "raccoon", "cow"];
+  // "Red Panda" -> panda, "Golden Retriever" -> dog, "Cats" -> cat. Unknown -> null.
+  function resolveAnimal(text) {
+    const words = String(text || "").toLowerCase().replace(/[^a-z\s]/g, " ").split(/\s+/).filter(Boolean);
+    for (const w of [...words].reverse()) {
+      for (const v of [w, w.replace(/s$/, ""), w.replace(/es$/, "")]) {
+        if (ANIMALS[v]) return v;
+        if (ANIMAL_ALIASES[v]) return ANIMAL_ALIASES[v];
+      }
+    }
+    return null;
+  }
+  // taken: animals already on the podium, so automatic picks don't repeat.
+  function animalFor(r, taken = []) {
+    const chosen = resolveAnimal(r.animal);
+    if (chosen) return { kind: chosen, typed: r.animal };
+    let i = hashName(r.name) % POOL.length;
+    while (taken.includes(POOL[i]) && taken.length < POOL.length) i = (i + 1) % POOL.length;
+    return { kind: POOL[i], typed: r.animal || "" };
+  }
+  function avatarSvg(r, place, kind) {
+    const a = ANIMALS[kind];
+    const kit = place === 0 ? "#f2c200" : KIT[hashName(r.name + "kit") % KIT.length];
     const o = 'stroke="#1d1a16" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"';
-    const backHair = hairStyle === 1 ? `<path d="M31 94 L31 56 C31 27 89 27 89 56 L89 94 Z" fill="${hair}" ${o}/>` : "";
-    const frontHair = [
-      `<path d="M34 56 C33 30 87 30 86 56 C80 45 70 41 60 41 C50 41 40 45 34 56 Z" fill="${hair}" ${o}/>`,
-      `<path d="M33 58 C32 30 88 30 87 58 C80 46 70 42 60 42 C50 42 40 46 33 58 Z" fill="${hair}" ${o}/>`,
-      [40, 50, 60, 70, 80].map((x, i) => `<circle cx="${x}" cy="${i % 2 ? 34 : 38}" r="9" fill="${hair}" ${o}/>`).join(""),
-      "",
-      `<circle cx="60" cy="24" r="9" fill="${hair}" ${o}/><path d="M34 56 C33 31 87 31 86 56 C80 45 70 41 60 41 C50 41 40 45 34 56 Z" fill="${hair}" ${o}/>`,
-    ][hairStyle];
-    const hat = head === 0
-      ? `<path d="M33 49 C34 25 86 25 87 49 Z" fill="${cap}" ${o}/><path d="M46 31 L46 48 M60 27 L60 48 M74 31 L74 48" stroke="#fff" stroke-width="3" opacity=".8"/><path d="M62 48 C74 46 90 45 98 47 C96 52 82 53 64 52 Z" fill="${cap}" ${o}/>`
-      : head === 1
-      ? `<path d="M28 52 C27 17 93 17 92 52 C80 47 40 47 28 52 Z" fill="${cap}" ${o}/><path d="M42 30 L46 44 M60 24 L60 42 M78 30 L74 44" stroke="#1d1a16" stroke-width="2.4" stroke-linecap="round"/><path d="M38 52 L34 64 M82 52 L86 64" stroke="#1d1a16" stroke-width="2"/>`
-      : "";
-    const eyes = shades
-      ? `<path d="M41 57 H57 V63 C57 68 41 68 41 63 Z M63 57 H79 V63 C79 68 63 68 63 63 Z" fill="#1d1a16"/><path d="M57 59 H63" ${o}/><path d="M45 59 L49 59" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".7"/>`
-      : `<circle cx="50" cy="61" r="3.4" fill="#1d1a16"/><circle cx="70" cy="61" r="3.4" fill="#1d1a16"/><circle cx="51" cy="60" r="1" fill="#fff"/><circle cx="71" cy="60" r="1" fill="#fff"/><path d="M44 53 Q50 50 55 53 M65 53 Q70 50 76 53" fill="none" ${o}/>`;
-    const mouth = grin
-      ? `<path d="M49 74 Q60 86 71 74 Z" fill="#7a2a1e" ${o}/><path d="M52 75 H68" stroke="#fff" stroke-width="2.4"/>`
-      : `<path d="M50 75 Q60 82 70 75" fill="none" ${o}/>`;
-    const moustache = tache ? `<path d="M48 71 C53 66 58 69 60 70 C62 69 67 66 72 71 C67 73 63 72 60 71 C57 72 53 73 48 71 Z" fill="${hair}" ${o}/>` : "";
-    return `<svg class="avatar" viewBox="0 0 130 132" role="img" aria-label="Cartoon of ${esc(name)}">
-      ${backHair}
+    const x = (k) => a.extras.includes(k);
+    const earFill = a.earFill || a.base;
+    const ears = {
+      pointy: `<path d="M35 46 L31 16 L55 34 Z" fill="${earFill}" ${o}/><path d="M85 46 L89 16 L65 34 Z" fill="${earFill}" ${o}/><path d="M38 40 L36 24 L49 34 Z" fill="${a.inner}"/><path d="M82 40 L84 24 L71 34 Z" fill="${a.inner}"/>`,
+      round: `<circle cx="38" cy="36" r="11" fill="${earFill}" ${o}/><circle cx="82" cy="36" r="11" fill="${earFill}" ${o}/><circle cx="38" cy="36" r="5.5" fill="${a.inner}"/><circle cx="82" cy="36" r="5.5" fill="${a.inner}"/>`,
+      fluffy: `<circle cx="34" cy="40" r="15" fill="${a.base}" ${o}/><circle cx="86" cy="40" r="15" fill="${a.base}" ${o}/><circle cx="34" cy="41" r="8" fill="${a.inner}"/><circle cx="86" cy="41" r="8" fill="${a.inner}"/>`,
+      big: `<circle cx="34" cy="34" r="15" fill="${a.base}" ${o}/><circle cx="86" cy="34" r="15" fill="${a.base}" ${o}/><circle cx="34" cy="34" r="9" fill="${a.inner}"/><circle cx="86" cy="34" r="9" fill="${a.inner}"/>`,
+      long: `<ellipse cx="48" cy="14" rx="8" ry="22" fill="${a.base}" ${o}/><ellipse cx="72" cy="14" rx="8" ry="22" fill="${a.base}" ${o}/><ellipse cx="48" cy="16" rx="3.5" ry="15" fill="${a.inner}"/><ellipse cx="72" cy="16" rx="3.5" ry="15" fill="${a.inner}"/>`,
+      floppy: "",
+      side: `<ellipse cx="30" cy="52" rx="11" ry="6" transform="rotate(-20 30 52)" fill="${a.base}" ${o}/><ellipse cx="90" cy="52" rx="11" ry="6" transform="rotate(20 90 52)" fill="${a.base}" ${o}/>`,
+      monkey: `<circle cx="32" cy="58" r="10" fill="${a.base}" ${o}/><circle cx="88" cy="58" r="10" fill="${a.base}" ${o}/><circle cx="32" cy="58" r="5" fill="${a.inner}"/><circle cx="88" cy="58" r="5" fill="${a.inner}"/>`,
+      tufts: `<path d="M38 40 L34 22 L50 34 Z" fill="${a.dark}" ${o}/><path d="M82 40 L86 22 L70 34 Z" fill="${a.dark}" ${o}/>`,
+      none: "",
+    }[a.ear];
+    const behind = (x("mane") ? [0, 40, 80, 120, 160, 200, 240, 280, 320].map(d => `<circle cx="${60 + 30 * Math.cos(d * Math.PI / 180)}" cy="${58 + 30 * Math.sin(d * Math.PI / 180)}" r="13" fill="${a.inner}" ${o}/>`).join("") : "")
+      + (x("wool") ? [200, 230, 260, 290, 320, 350, 20].map(d => `<circle cx="${60 + 26 * Math.cos(d * Math.PI / 180)}" cy="${56 + 24 * Math.sin(d * Math.PI / 180)}" r="11" fill="${a.light}" ${o}/>`).join("") : "")
+      + (x("unimane") ? `<path d="M84 34 C100 44 98 70 90 86 C86 70 84 56 78 46 Z" fill="#c89bf0" ${o}/><path d="M86 52 C96 60 96 74 92 82" fill="none" stroke="#7fd3f5" stroke-width="5"/>` : "")
+      + (x("horsemane") ? `<path d="M84 34 C98 44 96 70 90 86 C86 70 84 56 78 46 Z" fill="${a.dark}" ${o}/>` : "");
+    const head = a.muzzle === "horse"
+      ? `<path d="M36 50 C36 28 84 28 84 50 C84 64 78 70 76 84 C72 92 48 92 44 84 C42 70 36 64 36 50 Z" fill="${a.base}" ${o}/>`
+      : a.muzzle === "penguin"
+      ? `<ellipse cx="60" cy="60" rx="27" ry="28" fill="${a.base}" ${o}/><path d="M60 44 C68 36 80 44 78 58 C76 72 66 82 60 84 C54 82 44 72 42 58 C40 44 52 36 60 44 Z" fill="${a.light}"/>`
+      : `<ellipse cx="60" cy="60" rx="27" ry="28" fill="${a.base}" ${o}/>`;
+    const floppy = a.ear === "floppy" ? `<path d="M37 40 C24 42 22 66 30 74 C36 70 40 56 42 46 Z" fill="${a.inner}" ${o}/><path d="M83 40 C96 42 98 66 90 74 C84 70 80 56 78 46 Z" fill="${a.inner}" ${o}/>` : "";
+    const marks = (x("stripes") ? `<path d="M54 35 L56 43 M60 34 L60 43 M66 35 L64 43" stroke="${a.dark}" stroke-width="3" stroke-linecap="round"/>` : "")
+      + (x("tigerstripes") ? `<path d="M52 34 L55 44 M60 33 L60 44 M68 34 L65 44 M34 56 L44 58 M35 64 L43 64 M86 56 L76 58 M85 64 L77 64" stroke="${a.dark}" stroke-width="3.2" stroke-linecap="round"/>` : "")
+      + (x("spots") ? `<path d="M40 40 C46 34 54 38 50 46 C46 52 38 48 40 40 Z M72 44 C78 38 86 44 82 52 C78 56 70 52 72 44 Z" fill="${a.dark}"/>` : "")
+      + (x("patches") ? `<ellipse cx="49" cy="58" rx="7" ry="9" transform="rotate(25 49 58)" fill="${a.dark}"/><ellipse cx="71" cy="58" rx="7" ry="9" transform="rotate(-25 71 58)" fill="${a.dark}"/>` : "")
+      + (x("mask") ? `<path d="M36 56 C42 48 54 52 60 56 C66 52 78 48 84 56 C80 66 68 66 60 62 C52 66 40 66 36 56 Z" fill="${a.dark}"/>` : "");
+    const light = a.muzzle === "penguin" || x("patches") || x("mask");
+    const eyes = a.muzzle === "frog"
+      ? `<circle cx="46" cy="38" r="10" fill="${a.base}" ${o}/><circle cx="74" cy="38" r="10" fill="${a.base}" ${o}/><circle cx="46" cy="38" r="6.5" fill="#fff"/><circle cx="74" cy="38" r="6.5" fill="#fff"/><circle cx="47" cy="39" r="3.4" fill="#1d1a16"/><circle cx="75" cy="39" r="3.4" fill="#1d1a16"/>`
+      : a.muzzle === "owl"
+      ? `<circle cx="49" cy="56" r="11" fill="${a.light}" ${o}/><circle cx="71" cy="56" r="11" fill="${a.light}" ${o}/><circle cx="49" cy="57" r="5" fill="#1d1a16"/><circle cx="71" cy="57" r="5" fill="#1d1a16"/><circle cx="50.5" cy="55.5" r="1.6" fill="#fff"/><circle cx="72.5" cy="55.5" r="1.6" fill="#fff"/>`
+      : `<circle cx="50" cy="58" r="3.6" fill="${light ? "#fff" : "#1d1a16"}"/><circle cx="70" cy="58" r="3.6" fill="${light ? "#fff" : "#1d1a16"}"/>${light ? `<circle cx="50.6" cy="58.4" r="2" fill="#1d1a16"/><circle cx="70.6" cy="58.4" r="2" fill="#1d1a16"/>` : `<circle cx="51" cy="57" r="1.1" fill="#fff"/><circle cx="71" cy="57" r="1.1" fill="#fff"/>`}`;
+    const smile = `<path d="M54 74 Q57 77.5 60 74 Q63 77.5 66 74" fill="none" ${o}/>`;
+    const muzzle = {
+      cat: `<circle cx="55" cy="70" r="6.5" fill="${a.light}"/><circle cx="65" cy="70" r="6.5" fill="${a.light}"/><path d="M56 64 H64 L60 69 Z" fill="#e8798f" ${o}/>${smile}`,
+      fox: `<path d="M38 60 C46 64 54 66 60 76 C66 66 74 64 82 60 C80 76 70 86 60 86 C50 86 40 76 38 60 Z" fill="${a.light}"/><ellipse cx="60" cy="68" rx="5" ry="3.6" fill="#1d1a16"/>${smile}`,
+      dog: `<ellipse cx="60" cy="71" rx="14" ry="11" fill="${a.light}" ${o}/><ellipse cx="60" cy="65" rx="5.5" ry="4" fill="#1d1a16"/><path d="M60 69 V73" ${o}/>${smile}${x("tongue") ? `<path d="M56 76 C56 84 64 84 64 76 Z" fill="#e8798f" ${o}/>` : ""}`,
+      bear: `<ellipse cx="60" cy="70" rx="12" ry="9.5" fill="${a.light}" ${o}/><ellipse cx="60" cy="66" rx="5" ry="3.6" fill="#1d1a16"/>${smile}`,
+      koala: `<ellipse cx="60" cy="66" rx="7" ry="9" fill="${a.dark}" ${o}/><path d="M54 78 Q60 82 66 78" fill="none" ${o}/>`,
+      mouse: `<circle cx="60" cy="68" r="3.4" fill="#e8798f" ${o}/>${smile}`,
+      rabbit: `<path d="M57 64 H63 L60 68 Z" fill="#e8798f" ${o}/><path d="M60 68 V72" ${o}/>${smile}<rect x="56.5" y="75" width="7" height="6" rx="1" fill="#fff" ${o}/>`,
+      pig: `<ellipse cx="60" cy="69" rx="11" ry="8" fill="${a.light}" ${o}/><ellipse cx="56" cy="69" rx="2" ry="3" fill="${a.dark}"/><ellipse cx="64" cy="69" rx="2" ry="3" fill="${a.dark}"/><path d="M54 80 Q60 84 66 80" fill="none" ${o}/>`,
+      cow: `<ellipse cx="60" cy="74" rx="17" ry="10" fill="${a.light}" ${o}/><ellipse cx="54" cy="73" rx="2.4" ry="3.2" fill="#b8566f"/><ellipse cx="66" cy="73" rx="2.4" ry="3.2" fill="#b8566f"/>`,
+      monkey: `<path d="M60 52 C66 44 80 48 78 62 C78 76 68 84 60 84 C52 84 42 76 42 62 C40 48 54 44 60 52 Z" fill="${a.light}"/><ellipse cx="57" cy="68" rx="1.6" ry="2.2" fill="#1d1a16"/><ellipse cx="63" cy="68" rx="1.6" ry="2.2" fill="#1d1a16"/><path d="M52 75 Q60 82 68 75" fill="none" ${o}/>`,
+      frog: `<path d="M42 70 Q60 86 78 70" fill="none" ${o}/><circle cx="44" cy="66" r="4" fill="#ff7b7b" opacity=".45"/><circle cx="76" cy="66" r="4" fill="#ff7b7b" opacity=".45"/>`,
+      owl: `<path d="M55 64 L65 64 L60 74 Z" fill="#f2a33a" ${o}/><path d="M44 72 C50 82 70 82 76 72" fill="none" stroke="${a.light}" stroke-width="3"/>`,
+      penguin: `<path d="M53 66 L67 66 L60 74 Z" fill="#f2a33a" ${o}/>`,
+      duck: `<ellipse cx="60" cy="70" rx="15" ry="6.5" fill="#f28c28" ${o}/><path d="M47 70 H73" stroke="#1d1a16" stroke-width="1.6"/>`,
+      sheep: `<ellipse cx="60" cy="68" rx="9" ry="7" fill="#3a332d"/><path d="M57 66 H63" stroke="#fff" stroke-width="1.6"/>`,
+      horse: `<ellipse cx="60" cy="78" rx="15" ry="10" fill="${a.light}" ${o}/><ellipse cx="55" cy="78" rx="2" ry="3" fill="${a.dark}"/><ellipse cx="65" cy="78" rx="2" ry="3" fill="${a.dark}"/>`,
+    }[a.muzzle];
+    const top = (x("horns") ? `<path d="M42 36 C38 28 40 22 46 22 C44 28 46 32 48 34 Z M78 36 C82 28 80 22 74 22 C76 28 74 32 72 34 Z" fill="#f6e7c1" ${o}/>` : "")
+      + (x("horn") ? `<path d="M56 32 L60 6 L64 32 Z" fill="#ffd76a" ${o}/><path d="M57 26 L63 24 M58 19 L62 17" stroke="#c98d3e" stroke-width="1.6"/>` : "")
+      + (x("tuft") ? `<path d="M56 34 C54 26 60 24 60 32 C62 24 68 26 64 34 Z" fill="${a.base}" ${o}/>` : "");
+    const whiskers = x("whiskers") ? `<path d="M44 68 L32 66 M44 72 L32 74 M76 68 L88 66 M76 72 L88 74" stroke="#1d1a16" stroke-width="1.4" stroke-linecap="round"/>` : "";
+    const cheeks = ["frog", "owl", "penguin", "duck"].includes(a.muzzle) ? "" : `<circle cx="42" cy="68" r="4" fill="#ff7b7b" opacity=".35"/><circle cx="78" cy="68" r="4" fill="#ff7b7b" opacity=".35"/>`;
+    return `<svg class="avatar" viewBox="0 0 130 132" role="img" aria-label="Cartoon ${esc(kind)} for ${esc(r.name)}">
       <path d="M16 132 C16 102 36 94 60 94 C84 94 104 102 104 132 Z" fill="${kit}" ${o}/>
       <path d="M52 95 L60 108 L68 95" fill="none" ${o}/><path d="M60 108 V132" ${o}/>
       <path d="M42 112 L36 132 M78 112 L84 132" stroke="#fff" stroke-width="3" opacity=".55"/>
-      <rect x="53" y="80" width="14" height="16" fill="${skin}" ${o}/>
-      <circle cx="34" cy="62" r="6" fill="${skin}" ${o}/><circle cx="86" cy="62" r="6" fill="${skin}" ${o}/>
-      <ellipse cx="60" cy="60" rx="26" ry="28" fill="${skin}" ${o}/>
-      ${frontHair}${hat}
-      <circle cx="44" cy="70" r="4" fill="#ff7b7b" opacity=".45"/><circle cx="76" cy="70" r="4" fill="#ff7b7b" opacity=".45"/>
-      ${eyes}<path d="M59 64 Q62 68 59 70" fill="none" ${o}/>${moustache}${mouth}
+      <rect x="52" y="80" width="16" height="16" fill="${a.base}" ${o}/>
+      ${behind}${ears}${head}${floppy}${marks}${top}${cheeks}${eyes}${muzzle}${whiskers}
       <path d="M44 100 L48 116 L52 100" fill="none" stroke="#1d1a16" stroke-width="2"/><circle cx="48" cy="120" r="7" fill="${MEDAL[place]}" ${o}/><text x="48" y="123.5" text-anchor="middle" font-size="9" font-weight="700" fill="#1d1a16" font-family="Barlow Condensed, sans-serif">${place + 1}</text>
       <g transform="rotate(-12 108 96)"><path d="M118 88 C126 88 126 104 118 104" fill="none" stroke="#1d1a16" stroke-width="3"/><rect x="96" y="82" width="22" height="30" rx="3" fill="#e9a23b" ${o}/><path d="M101 88 V106 M107 88 V106 M113 88 V106" stroke="#fff" stroke-width="1.6" opacity=".45"/><path d="M94 84 C94 76 100 74 104 77 C106 72 114 72 116 77 C122 75 124 82 120 85 Z" fill="#fffaf0" ${o}/></g>
     </svg>`;
@@ -1078,13 +1174,16 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
   function renderPodium(list) {
     const top = list.filter(qualified).sort((a, b) => b.au - a.au).slice(0, 3);
     if (!top.length) { $("podium").innerHTML = `<p class="sub">No one has ${MIN_DRINKS} counted drinks yet.</p>`; return; }
+    const kinds = [];
+    top.forEach(r => kinds.push(animalFor(r, kinds).kind));
     const slots = [1, 0, 2]; // classic podium order: 2nd, 1st, 3rd
     $("podium").innerHTML = slots.map(i => {
       const r = top[i];
       if (!r) return `<div class="step step-${i + 1} empty-step"></div>`;
       return `<div class="step step-${i + 1}">
-        ${avatarSvg(r.name, i)}
+        ${avatarSvg(r, i, kinds[i])}
         <div class="step-name">${esc(r.name)}</div>
+        <div class="step-animal">the ${esc(kinds[i])}</div>
         ${formLine(r)}
         <div class="step-au">${fmtAu(r.au)} AU${i ? ` <span class="gap">+${fmtAu(top[0].au - r.au)}</span>` : ""}</div>
         <div class="block"><span>${i + 1}</span></div>
@@ -1253,7 +1352,8 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
       const lastTime = last ? (String(last).match(/(\d{1,2}):(\d{2})/) || []) : [];
       const when = lastTime.length ? `${(+lastTime[1] % 12) || 12}:${lastTime[2]} ${+lastTime[1] < 12 ? "AM" : "PM"}` : "";
       $("status").textContent = [when && `Latest drink ${when}`, isFinite(stop) && `after stop ${stop}`, `${drinks} drinks from ${list.length} riders`].filter(Boolean).join(" · ");
-      showIssues([...unmapped.map(n => `${esc(n)} isn't in the Rider Names sheet yet, so their form name is shown as their display name`), ...skipped.map(esc)]);
+      const oddAnimals = list.filter(r => r.animal && !resolveAnimal(r.animal)).map(r => `${esc(r.name)}'s animal "${esc(r.animal)}" isn't one the podium can draw yet, so they get a ${esc(animalFor(r).kind)}`);
+      showIssues([...oddAnimals, ...unmapped.map(n => `${esc(n)} isn't in the Rider Names sheet yet, so their form name is shown as their display name`), ...skipped.map(esc)]);
     } catch (e) {
       render([]);
       $("status").textContent = e.message;

@@ -9,7 +9,7 @@ connectors can't be attached to routines in this organisation, so they can't rea
 | Thing | Where |
 |---|---|
 | Drinks sheet | Google Drive file `1RxgUCudXWTEWxoq7LoU9xiT1dIJfdhRePCnjvECsto0` |
-| Rider Names sheet (form name → display name) | Google Drive file `10ar6o290JM09kW4Q1JN7Huq1y5BuSH5xOySc84neheQ` |
+| Rider Names sheet (form name → display name, optional Animal column) | Google Drive file `10ar6o290JM09kW4Q1JN7Huq1y5BuSH5xOySc84neheQ` |
 | Public leaderboard | https://xuhanwen97.github.io/BikeBrew/ (GitHub Pages, this branch) |
 | claude.ai leaderboard | https://claude.ai/artifact/1A8iqA15we3wFGWQZywv1M |
 | Control page (private) | https://claude.ai/artifact/NZxmMPfr5Bk7k5tgzqGV23 |
