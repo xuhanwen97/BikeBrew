@@ -1202,8 +1202,36 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
       ${place >= 0 ? MEDAL_SVG(place, o) : ""}
     </svg>`;
   }
+  // Panda: flat kawaii style (solid black limbs and ears, thin outline on white, tilted eye
+  // patches, pink blush), waving with the beer in its raised paw.
+  function pandaSvg(r, place) {
+    const ink = "#111111";
+    const line = `stroke="${ink}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"`;
+    const kit = place === 0 ? "#f2c200" : KIT[hashName(r.name + "kit") % KIT.length];
+    const medal = place >= 0 ? `<path d="M56 92 L60 104 L64 92" fill="none" stroke="${ink}" stroke-width="1.6"/><circle cx="60" cy="108" r="6.5" fill="${MEDAL[place]}" ${line}/><text x="60" y="111.2" text-anchor="middle" font-size="8.5" font-weight="700" fill="${ink}" font-family="Barlow Condensed, sans-serif">${place + 1}</text>` : "";
+    return `<svg class="avatar" viewBox="0 0 130 132" role="img" xmlns="http://www.w3.org/2000/svg" aria-label="Cartoon panda for ${esc(r.name)}">
+      <rect x="45" y="112" width="13" height="20" rx="6" fill="${ink}"/><rect x="66" y="112" width="13" height="20" rx="6" fill="${ink}"/>
+      <ellipse cx="62" cy="105" rx="25" ry="22" fill="#fff" ${line}/>
+      <path d="M40 92 C46 84 56 82 62 82 C70 82 80 84 86 92 C80 96 72 94 62 94 C52 94 44 96 40 92 Z" fill="${ink}"/>
+      <path d="M84 88 C92 92 96 106 94 118 C93 122 86 122 86 118 C86 108 82 100 78 94 Z" fill="${ink}"/>
+      <path d="M44 92 C36 84 26 70 20 56 C18 50 26 46 30 51 C36 62 44 74 52 86 Z" fill="${ink}"/>
+      <g transform="rotate(-14 22 40)"><path d="M33 34 C40 34 40 48 33 48" fill="none" stroke="${ink}" stroke-width="2.6"/><rect x="12" y="28" width="21" height="27" rx="3" fill="#e9a23b" ${line}/><path d="M17 33 V50 M22.5 33 V50 M28 33 V50" stroke="#fff" stroke-width="1.5" opacity=".5"/><path d="M10 30 C10 23 16 21 19 24 C21 19 29 19 31 24 C37 22 38 29 35 31 Z" fill="#fffaf0" ${line}/></g>
+      <circle cx="25" cy="54" r="6" fill="${ink}"/>
+      <circle cx="38" cy="31" r="11" fill="${ink}"/><circle cx="88" cy="31" r="11" fill="${ink}"/>
+      <ellipse cx="63" cy="56" rx="31" ry="27" fill="#fff" ${line}/>
+      <path d="M50 81 L76 81 L63 93 Z" fill="${kit}" ${line}/>
+      <ellipse cx="50" cy="57" rx="7.5" ry="10" transform="rotate(32 50 57)" fill="${ink}"/>
+      <ellipse cx="76" cy="57" rx="7.5" ry="10" transform="rotate(-32 76 57)" fill="${ink}"/>
+      <ellipse cx="51.5" cy="54.5" rx="2.6" ry="3" fill="#fff"/><ellipse cx="74.5" cy="54.5" rx="2.6" ry="3" fill="#fff"/>
+      <ellipse cx="44" cy="68" rx="6" ry="4.6" fill="#f7a8b0"/><ellipse cx="82" cy="68" rx="6" ry="4.6" fill="#f7a8b0"/>
+      <path d="M60.5 64 H65.5 C65.5 66.5 63 67.6 63 67.6 C63 67.6 60.5 66.5 60.5 64 Z" fill="${ink}"/>
+      <path d="M57.5 69 Q60.2 72.4 63 69.4 Q65.8 72.4 68.5 69" fill="none" stroke="${ink}" stroke-width="1.8" stroke-linecap="round"/>
+      ${medal}
+    </svg>`;
+  }
   function avatarSvg(r, place, kind) {
     if (kind === "pacman") return pacmanSvg(r, place);
+    if (kind === "panda") return pandaSvg(r, place);
     const a = ANIMALS[kind];
     const kit = place === 0 ? "#f2c200" : KIT[hashName(r.name + "kit") % KIT.length];
     const o = 'stroke="#1d1a16" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"';
