@@ -19,21 +19,14 @@ Live page: https://claude.ai/artifact/1A8iqA15we3wFGWQZywv1M (private until shar
 ## Architecture
 
 ```
-Google Form ──► Google Sheet (responses) ──► Leaderboard page
-                                              ├─ "Refresh leaderboard" button re-reads the sheet
-                                              ├─ parse rows → score per rider → rank the 4 jerseys
-                                              └─ render jersey cards + General Classification table
+Google Form ──► Google Sheet (responses) ──► Claude reads it ──► tools/update_data.py ──► index.html ──► republish
 ```
 
-- **Single file:** `index.html` holds the page, styles and logic, with no build step.
-- **Standings baked into the page:** the latest sheet read is embedded in `index.html` (`#bb-data`), so every viewer sees standings, including people who open the link outside Claude or aren't signed in.
-- **Refreshing:**
-  - On claude.ai the page reads the sheet through the viewer's **Google Drive** connector (`read_file_content`).
-  - When the organiser taps **Refresh** and the sheet has changed, the page republishes itself with the new standings embedded, so everyone gets them. Page loads never republish.
-  - Viewers with Drive but without edit rights still get a live read; it's also saved to the shared database (`standings/latest`).
-  - Hosted elsewhere (e.g. GitHub Pages), it falls back to the public CSV endpoint `https://docs.google.com/spreadsheets/d/<ID>/gviz/tq?tqx=out:csv`, which needs the sheet shared as "Anyone with the link can view".
-- **Sheet setting:** defaults to the event sheet; editors can change it under Sheet settings.
-- **Example data** appears until a sheet is connected, marked "Example data".
+- **Single file:** `index.html` holds the page, styles, logic and data, with no build step.
+- **Data is hard-coded** in the `<script type="application/json" id="bb-data">` block: the sheet's rows as JSON plus when they were pulled. The page needs no Google access, so it works for anyone with the link, on any device.
+- **Refreshing:** ask Claude to refresh. It reads the sheet through Google Drive, saves the text to a file, runs `python3 tools/update_data.py <file>` to bake the rows into `index.html`, republishes the page and commits.
+- `update_data.py` accepts Drive's markdown-table export or a CSV/TSV download of the sheet, and warns if fewer rows came through than the sheet holds.
+- The page scores the rows in the browser and lists rows it couldn't count (missing name, unreadable volume or ABV) so they can be fixed in the sheet.
 
 ## Google Form setup
 
@@ -52,10 +45,9 @@ Recommended questions. Columns are matched by header name, so wording can vary:
 1. **Data contract:** settle the form questions above and link the form to a sheet. ✅ parser is header-tolerant
 2. **Scoring engine:** parse CSV / TSV / table text → per-rider totals → four jersey rankings with Tour-style gaps. ✅
 3. **Themed UI:** race-poster masthead, coaster-wheel bike, jersey cards with leaders and top 5, GC table with jersey badges. ✅
-4. **Refresh:** a tap-handle button re-reads the sheet on demand and shows the last-updated time. ✅
+4. **Refresh:** ask Claude to refresh; it bakes the latest sheet into the page and republishes. ✅
 5. **Hosting:** published as a claude.ai artifact. ✅ Share it from the page's Share menu.
 6. **Next ideas:**
    - Stages: group by day from the form timestamp, with stage winners.
    - Minimum-drinks threshold for green/white so one taster can't win the jersey.
-   - Auto-refresh every few minutes during the event.
    - Rider photos/avatars and a "lanterne rouge" for last place.

@@ -1,4 +1,4 @@
-<!--bb-src--><title>Bike &amp; Brews</title>
+<title>Bike &amp; Brews</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap">
@@ -57,35 +57,12 @@ body { background: var(--bg); color: var(--ink); font-family: var(--f-body); fon
 
 /* Toolbar */
 .bar { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
-.tap { appearance: none; border: 0; cursor: pointer; font: 600 15px/1 var(--f-body); color: var(--on-yellow);
-  background: var(--yellow); padding: 12px 18px 12px 14px; border-radius: 999px; display: inline-flex; align-items: center; gap: 10px;
-  box-shadow: inset 0 -3px 0 rgba(0,0,0,.18); }
-.tap:hover { filter: brightness(1.05); }
-.tap:focus-visible, .ghost:focus-visible, input:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
-.tap[disabled] { opacity: .7; cursor: progress; }
-.tap svg { width: 20px; height: 20px; }
-.tap.spin svg { animation: spin 1s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.ghost { appearance: none; background: transparent; border: 1px solid var(--line); color: var(--ink); font: 500 14px/1 var(--f-body); padding: 10px 14px; border-radius: 999px; cursor: pointer; }
-.ghost:hover { border-color: var(--muted); }
 .status { font-family: var(--f-data); font-size: 14px; color: var(--muted); letter-spacing: .02em; }
 .pill { display: inline-block; font-family: var(--f-data); font-weight: 700; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; }
-.pill.demo { background: var(--foam); color: var(--amber); border: 1px dashed var(--amber); }
-.pill.live { background: var(--green); color: #fff; }
 .pill.snap { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
-.pill.err { background: var(--polka); color: #fff; }
 
-/* Connect panel */
-.connect { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 10px; }
-.connect h2 { margin: 0; font: 700 17px/1.2 var(--f-body); }
-.connect p { margin: 0; color: var(--muted); font-size: 14px; max-width: 70ch; }
-.connect form { display: flex; flex-wrap: wrap; gap: 10px; }
-.connect input { flex: 1 1 280px; min-width: 0; font: 15px var(--f-body); padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
-.connect code { font-family: var(--f-data); background: var(--bg); padding: 1px 6px; border-radius: 6px; }
 .issues { border: 1px dashed var(--amber); background: var(--foam); border-radius: 12px; padding: 10px 14px; font-size: 14px; color: var(--ink); }
 .issues ul { margin: 4px 0 0; padding-left: 20px; color: var(--muted); }
-.msg { font-size: 14px; color: var(--polka); }
-.msg.ok { color: var(--green); }
 
 /* Jerseys */
 .jerseys { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
@@ -144,11 +121,7 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
   .mast > div { display: contents; }
   .mast .titles { grid-column: 1; }
   .bike { width: 92px; justify-self: end; grid-column: 2; grid-row: 1; margin-top: 6px; }
-  .bar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
-  .bar .tap { grid-column: 1 / -1; justify-content: center; min-height: 48px; font-size: 16px; }
-  .bar .status { grid-column: 1 / -1; grid-row: 3; font-size: 13px; }
-  .bar .ghost { justify-self: end; min-height: 36px; }
-  .connect form .tap, .connect form .ghost { flex: 1 1 auto; justify-content: center; min-height: 44px; }
+  .bar .status { font-size: 13px; }
   .jerseys { gap: 12px; }
   .jersey header { grid-template-columns: 44px minmax(0, 1fr); gap: 12px; padding: 14px 14px 10px; }
   .jersey header svg { width: 44px; height: 44px; }
@@ -165,7 +138,6 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
   .sub-m { display: block; color: var(--muted); font-family: var(--f-data); font-size: 13px; margin-top: 1px; }
   td.au .gap { display: block; font-size: 13px; font-weight: 500; }
 }
-@media (prefers-reduced-motion: reduce) { .tap.spin svg { animation: none; } }
 </style>
 
 <div class="wrap">
@@ -175,7 +147,7 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
         <div class="kicker">Le Tour de Brew · Classement général</div>
         <h1>Bike <span class="amp">&amp;</span> Brews</h1>
       </div>
-      <p>Four jerseys, one bike, one brewery. Every pour logged on the form counts toward the standings, measured in standard drinks (AU).</p>
+      <p>Four jerseys, one bike, one brewery. Every pour logged on the form counts toward the standings, measured in standard drinks (AU). Standings are updated by the organisers through the day.</p>
     </div>
     <svg class="bike" viewBox="0 0 220 120" role="img" aria-label="A bicycle whose wheels are beer coasters">
       <defs>
@@ -195,29 +167,11 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
   <div class="road" aria-hidden="true"></div>
 
   <div class="bar">
-    <button class="tap" id="refresh" type="button">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/><path d="M12 3v6.5M12 14.5V21M3 12h6.5M14.5 12H21M5.6 5.6l4.8 4.8M13.6 13.6l4.8 4.8M18.4 5.6l-4.8 4.8M10.4 13.6l-4.8 4.8"/></svg>
-      Refresh leaderboard
-    </button>
-    <span id="mode" class="pill snap">Latest snapshot</span>
-    <span id="status" class="status">Loading the latest standings…</span>
-    <button class="ghost" id="allow" type="button" hidden>Allow Google Drive</button>
-    <button class="ghost" id="toggleConnect" type="button">Sheet settings</button>
+    <span class="pill snap">Standings</span>
+    <span id="status" class="status">Loading standings…</span>
   </div>
 
   <div class="issues" id="issues" role="status" hidden></div>
-
-  <section class="connect" id="connect" hidden>
-    <h2>Connect the drinks sheet</h2>
-    <p>Paste the link to the Google Sheet your form writes to. On this page the sheet is read through your Google Drive connection, so anyone viewing needs Drive connected and access to the sheet.</p>
-    <form id="sheetForm">
-      <input id="sheetUrl" type="url" placeholder="https://docs.google.com/spreadsheets/d/…/edit" autocomplete="off" required>
-      <button class="tap" type="submit">Save sheet</button>
-      <button class="ghost" type="button" id="useDemo">Show example data</button>
-    </form>
-    <p>Columns are detected by header name: a rider name (<code>Name</code>), the volume (<code>Volume (ml)</code>, <code>oz</code> or <code>L</code>, or units written in the answer like <code>330ml</code>, <code>12oz</code>, <code>pint</code>), and <code>ABV</code>. A <code>Standard drinks</code> column, if present, is used as-is.</p>
-    <div id="connectMsg" class="msg" role="status"></div>
-  </section>
 
   <section class="jerseys" id="jerseys" aria-label="Jersey leaders"></section>
 
@@ -238,58 +192,252 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
   </footer>
 </div>
 
-<script type="application/json" id="bb-data">{"sheetId": "1RxgUCudXWTEWxoq7LoU9xiT1dIJfdhRePCnjvECsto0", "text": "Context Type: corpus_document\n## Table Context\n### File Name: Bikes & Brews v6 (Responses)\n### Sheet Name: Form Responses 1\n### Table Range: A1:F27\n### Table Sample Data:\n|                    |                 |         |                      |               |                      |\n| :----------------: | :-------------: | :-----: | :------------------: | :-----------: | :------------------: |\n| Timestamp          | Name            | stop \\# | drink volume (fl oz) | drink abv (%) | are you having fun?  |\n| 10/3/2026 11:57:04 | Matt            | 1       | 12                   | 7             | Ready to roll        |\n| 10/3/2026 11:57:43 | Ari             | 1       | 12                   | 5.5           | Yes                  |\n| 10/3/2026 11:58:40 | Jack Sebok      | 1       | 6                    | 4             | No                   |\n| 10/3/2026 11:58:46 | Michael         | 1       | 12                   | 5.5           | A little damp        |\n| 10/3/2026 11:58:53 | Sucher          | 1       | 12                   | 5             | Ready to roll        |\n| 10/3/2026 11:59:56 | Viktor          | 1       | 12 oz                | 5.60%         | Ready to roll        |\n| 10/3/2026 12:00:32 | Kimberly Larkin | 1       | 16                   | O             | Yes                  |\n| 10/3/2026 12:00:55 | Maddie Brickell | 1       | 6                    | 6             | Yes                  |\n| 10/3/2026 12:01:34 | Kiersten        | 1       | 12                   | 5.6           | Yes                  |\n| 10/3/2026 12:01:38 |                 | 1       | 12                   | 4             | A little damp        |\n| 10/3/2026 12:03:48 | Teags           | 1       | 19.2                 | 9.5           | Thirsty              |\n| 10/3/2026 12:04:36 | Sherry          | 1       | 7                    | 4             | Ready to roll        |\n| 10/3/2026 12:04:57 | Tarra           | 1       | 12                   | 5             | Thirsty              |\n| 10/3/2026 12:08:19 | Charles Warden  | 1       | 6                    | 9             | Yes                  |\n| 10/3/2026 12:09:24 | Matt            | 1       | 12                   | 7             | Yes                  |\n| 10/3/2026 12:09:29 | Kimberly Larkin | 1       | 12                   | 5.5           | Yes                  |\n| 10/3/2026 13:05:02 | Ari             | 2       | 13                   | 6             | Beer                 |\n| 10/3/2026 13:07:16 | Teags           | 2       | 9                    | 6.8           | Beer                 |\n| 10/3/2026 13:07:35 | Michael         | 1       | 16                   | 4.1           | Option 6             |\n| 10/3/2026 13:07:35 | Maddie Brickell | 2       | 16                   | 5.5           | Beer                 |\n| 10/3/2026 13:08:31 | Matt            | 2       | 16                   | 6.8           | Thirsty              |\n| 10/3/2026 13:09:05 | Kimberly Larkin | 2       | 16                   | 5.4           | Yes                  |\n| 10/3/2026 13:12:09 |                 | 2       | 16                   | 6.1           | Thirsty              |\n| 10/3/2026 13:15:38 | Tarra           | 2       | 10                   | 5.2           | Saddle sores (ow)    |\n| 10/3/2026 13:16:39 | Kiersten        | 2       | 16                   | 5.6           | Yes                  |\n| 10/3/2026 13:20:54 | Kelsey          | 2       | 16                   | 5.4           | Ready to roll        |\n\n### Table Columns:\n- \n  - range: A1:A27\n", "updatedAt": 1791048657306}</script>
+<script type="application/json" id="bb-data">
+{
+"updatedAt": 1791049036778,
+"rows": [
+[
+"Timestamp",
+"Name",
+"stop #",
+"drink volume (fl oz)",
+"drink abv (%)",
+"are you having fun?"
+],
+[
+"10/3/2026 11:57:04",
+"Matt",
+"1",
+"12",
+"7",
+"Ready to roll"
+],
+[
+"10/3/2026 11:57:43",
+"Ari",
+"1",
+"12",
+"5.5",
+"Yes"
+],
+[
+"10/3/2026 11:58:40",
+"Jack Sebok",
+"1",
+"6",
+"4",
+"No"
+],
+[
+"10/3/2026 11:58:46",
+"Michael",
+"1",
+"12",
+"5.5",
+"A little damp"
+],
+[
+"10/3/2026 11:58:53",
+"Sucher",
+"1",
+"12",
+"5",
+"Ready to roll"
+],
+[
+"10/3/2026 11:59:56",
+"Viktor",
+"1",
+"12 oz",
+"5.60%",
+"Ready to roll"
+],
+[
+"10/3/2026 12:00:32",
+"Kimberly Larkin",
+"1",
+"16",
+"O",
+"Yes"
+],
+[
+"10/3/2026 12:00:55",
+"Maddie Brickell",
+"1",
+"6",
+"6",
+"Yes"
+],
+[
+"10/3/2026 12:01:34",
+"Kiersten",
+"1",
+"12",
+"5.6",
+"Yes"
+],
+[
+"10/3/2026 12:01:38",
+"",
+"1",
+"12",
+"4",
+"A little damp"
+],
+[
+"10/3/2026 12:03:48",
+"Teags",
+"1",
+"19.2",
+"9.5",
+"Thirsty"
+],
+[
+"10/3/2026 12:04:36",
+"Sherry",
+"1",
+"7",
+"4",
+"Ready to roll"
+],
+[
+"10/3/2026 12:04:57",
+"Tarra",
+"1",
+"12",
+"5",
+"Thirsty"
+],
+[
+"10/3/2026 12:08:19",
+"Charles Warden",
+"1",
+"6",
+"9",
+"Yes"
+],
+[
+"10/3/2026 12:09:24",
+"Matt",
+"1",
+"12",
+"7",
+"Yes"
+],
+[
+"10/3/2026 12:09:29",
+"Kimberly Larkin",
+"1",
+"12",
+"5.5",
+"Yes"
+],
+[
+"10/3/2026 13:05:02",
+"Ari",
+"2",
+"13",
+"6",
+"Beer"
+],
+[
+"10/3/2026 13:07:16",
+"Teags",
+"2",
+"9",
+"6.8",
+"Beer"
+],
+[
+"10/3/2026 13:07:35",
+"Michael",
+"1",
+"16",
+"4.1",
+"Option 6"
+],
+[
+"10/3/2026 13:07:35",
+"Maddie Brickell",
+"2",
+"16",
+"5.5",
+"Beer"
+],
+[
+"10/3/2026 13:08:31",
+"Matt",
+"2",
+"16",
+"6.8",
+"Thirsty"
+],
+[
+"10/3/2026 13:09:05",
+"Kimberly Larkin",
+"2",
+"16",
+"5.4",
+"Yes"
+],
+[
+"10/3/2026 13:12:09",
+"",
+"2",
+"16",
+"6.1",
+"Thirsty"
+],
+[
+"10/3/2026 13:15:38",
+"Tarra",
+"2",
+"10",
+"5.2",
+"Saddle sores (ow)"
+],
+[
+"10/3/2026 13:16:39",
+"Kiersten",
+"2",
+"16",
+"5.6",
+"Yes"
+],
+[
+"10/3/2026 13:20:54",
+"Kelsey",
+"2",
+"16",
+"5.4",
+"Ready to roll"
+],
+[
+"10/3/2026 13:32:40",
+"Matt",
+"2",
+"16",
+"6.8",
+"Beer"
+],
+[
+"10/3/2026 13:33:00",
+"Sherry",
+"2",
+"16",
+"5.4",
+"Yes"
+]
+]
+}
+</script>
 <script>
 (() => {
   "use strict";
   const ETHANOL = 0.789; // g/ml; AU standard drink = 10 g
-  const SHEET_DOC = "config/sheet";
-  // The page's own markup, captured before anything renders, so the owner can
-  // republish it with fresh standings baked in (see bakeIntoPage).
-  const SRC = (() => { const h = document.body.innerHTML, i = h.indexOf("<!--bb-src-->"); return i >= 0 ? h.slice(i) : null; })();
-  const BAKED = (() => { try { return JSON.parse(document.getElementById("bb-data").textContent); } catch { return null; } })();
   const $ = (id) => document.getElementById(id);
-  const state = { sheetId: null };
 
-  // ---------- Example data (shown until a sheet is connected) ----------
-  const EXAMPLE = [
-    ["Name","Drink","Volume (ml)","ABV (%)"],
-    ["Example: Lanterne Rouge","Hazy IPA","473","6.8"],["Example: Lanterne Rouge","Pilsner","355","5.0"],["Example: Lanterne Rouge","Imperial Stout","250","10.5"],
-    ["Example: Domestique Dan","Light Lager","355","4.2"],["Example: Domestique Dan","Light Lager","355","4.2"],["Example: Domestique Dan","Shandy","568","2.5"],["Example: Domestique Dan","Light Lager","355","4.2"],
-    ["Example: Sprinter Sam","Double IPA","473","8.5"],["Example: Sprinter Sam","Barleywine","200","11.2"],
-    ["Example: Climber Cleo","Kölsch","500","4.8"],["Example: Climber Cleo","Kölsch","500","4.8"],["Example: Climber Cleo","Pale Ale","473","5.6"],["Example: Climber Cleo","Radler","500","2.5"],
-  ];
-
-  // ---------- Parsing ----------
-  function parseDelimited(text, delim) {
-    const rows = []; let row = [], field = "", q = false;
-    for (let i = 0; i < text.length; i++) {
-      const c = text[i];
-      if (q) { if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else q = false; } else field += c; }
-      else if (c === '"' && field === "") q = true;
-      else if (c === delim) { row.push(field); field = ""; }
-      else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(field); rows.push(row); row = []; field = ""; }
-      else field += c;
-    }
-    if (field !== "" || row.length) { row.push(field); rows.push(row); }
-    return rows.filter(r => r.some(x => x.trim() !== ""));
-  }
-  function parseTable(text) {
-    // Markdown tables (Google Drive's sheet export): split into blocks of consecutive
-    // pipe rows and use the first block that has a usable header row.
-    const blocks = []; let cur = null;
-    for (const l of text.split(/\r?\n/)) {
-      if (/^\s*\|.*\|\s*$/.test(l)) {
-        if (/^\s*\|[\s:|-]+\|\s*$/.test(l)) continue;
-        if (!cur) blocks.push(cur = []);
-        cur.push(l.trim().replace(/^\||\|$/g, "").replace(/\\\|/g, "\u0000").split("|").map(c => c.replace(/\u0000/g, "|").trim().replace(/\\(.)/g, "$1")));
-      } else cur = null;
-    }
-    if (blocks.length) return blocks.find(b => locateHeader(b) >= 0) || blocks[0];
-    const tabs = (text.match(/\t/g) || []).length, commas = (text.match(/,/g) || []).length;
-    return parseDelimited(text, tabs > commas / 2 ? "\t" : ",");
-  }
-  // Find the header row: the first row that has a name-like and an ABV-like column.
+  // Find the header row  // Find the header row: the first row that has a name-like and an ABV-like column.
   function locateHeader(rows) {
     for (let i = 0; i < Math.min(rows.length, 15); i++) {
       const h = rows[i].map(s => String(s).toLowerCase());
@@ -423,201 +571,30 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
     $("status").textContent = text;
   }
 
-  // ---------- Data sources ----------
-  function sheetIdFrom(input) {
-    const s = String(input).trim();
-    const m = s.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]{20,})/);
-    if (m) return m[1];
-    return /^[a-zA-Z0-9_-]{20,}$/.test(s) ? s : null;
-  }
-  function textFromPayload(p) {
-    if (p == null) return "";
-    if (typeof p === "string") return p;
-    if (Array.isArray(p)) return p.map(textFromPayload).join("\n");
-    if (typeof p === "object") {
-      for (const k of ["content", "text", "fileContent", "body", "data", "result"]) if (typeof p[k] === "string") return p[k];
-      const strs = Object.values(p).filter(v => typeof v === "string");
-      return strs.sort((a, b) => b.length - a.length)[0] || "";
-    }
-    return "";
-  }
-  async function readViaDrive(id) {
-    const mcp = window.claude ? await window.claude.use("mcp") : null;
-    if (!mcp) { const e = new Error("no_drive"); e.code = "no_drive"; throw e; }
-    const res = await mcp.callTool("Google Drive", "read_file_content", { fileId: id }, { cache: { refresh: true } });
-    let text = textFromPayload(res.payload);
-    if (!text) text = (res.content || []).filter(b => b.type === "text").map(b => b.text).join("\n");
-    return text;
-  }
-  // Outside claude.ai (e.g. GitHub Pages) the public CSV export works for link-shared sheets.
-  async function readViaPublicCsv(id) {
-    const r = await fetch(`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv`, { cache: "no-store" });
-    if (!r.ok) throw new Error("Sheet returned " + r.status);
-    return r.text();
-  }
-  const inClaude = () => !!(window.claude && typeof window.claude.use === "function");
-
-  const MCP_HELP = {
-    no_drive: "Live refresh needs Google Drive, which isn't available in this view. Open the page in claude.ai while signed in.",
-    server_not_connected: "Google Drive isn't connected for you. Connect it in claude.ai Settings → Connectors, then refresh.",
-    needs_reauth: "Your Google Drive connection expired. Reconnect it in claude.ai Settings → Connectors.",
-    not_granted: "This page isn't allowed to use your Google Drive yet.",
-    consent_required: "This page isn't allowed to use your Google Drive yet.",
-    tool_error: "Google Drive couldn't open the sheet. Ask the organiser to share it with you.",
-    rate_limited: "Too many refreshes. Wait a minute and try again.",
-  };
-  const NEEDS_ALLOW = ["not_granted", "consent_required"];
-
-  // Score + render one copy of the sheet text. `when` is the time it was read.
-  function show(text, when, source) {
-    const { list, skipped, stop } = score(parseTable(text));
-    render(list);
-    const t = new Date(when).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-    const drinks = list.reduce((s, r) => s + r.drinks, 0);
-    const what = `${isFinite(stop) ? `after stop ${stop} · ` : ""}${drinks} drinks from ${list.length} riders`;
-    setMode(source === "live" ? "live" : "snap", (source === "live" ? `Updated ${t} · ` : `Standings as of ${t} · `) + what);
-    // Drive's export states the sheet's range; warn if we got fewer rows than it holds.
-    const range = text.match(/Table Range:\s*[A-Z]+(\d+):[A-Z]+(\d+)/);
-    const notes = skipped.map(esc);
-    if (range) {
-      const expected = +range[2] - +range[1];
-      const seen = drinks + skipped.length;
-      if (seen < expected) notes.unshift(`Only ${seen} of ${expected} responses came through from Google Drive, so the standings may be missing the newest drinks.`);
-    }
-    showIssues(notes);
-  }
-
-  // ---------- Shared state (db): sheet setting + latest snapshot ----------
-  const DEFAULT_SHEET = "1RxgUCudXWTEWxoq7LoU9xiT1dIJfdhRePCnjvECsto0";
-  const SNAP_DOC = "standings/latest";
-  let db = null, snapshot = null;
-  const dbReady = (async () => {
-    if (!inClaude()) return null;
-    db = await window.claude.use("db");
-    return db;
-  })();
-  const local = {
-    get() { try { return localStorage.getItem("bb.sheet"); } catch { return null; } },
-    set(v) { try { localStorage.setItem("bb.sheet", v); } catch {} },
-  };
-  async function saveSheet(id) {
-    state.sheetId = id;
-    local.set(id || "demo");
-    if (!db) return false;
-    try { await db.doc(SHEET_DOC).set({ sheetId: id || "" }); return true; } catch { return false; }
-  }
-  async function saveSnapshot(text) {
-    if (!db) return;
-    try { await db.doc(SNAP_DOC).set({ sheetId: state.sheetId, text, updatedAt: Date.now() }); } catch {}
-  }
-
-  function showDemo() {
-    showIssues([]); render(score(EXAMPLE).list);
-    setMode("demo", "Showing example riders. Open Sheet settings to connect the drinks sheet.");
-  }
-
-  // Republish the page with these standings embedded, so every viewer sees them,
-  // including people who open the link outside Claude. Only the owner/editors can.
-  const SKELETON = '<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>';
-  async function bakeIntoPage(data) {
-    if (!SRC || !inClaude()) return "unavailable";
-    const artifact = await window.claude.use("artifact");
-    if (!artifact) return "unavailable";
-    const blob = JSON.stringify(data).replace(/<\//g, "<\\/");
-    const re = /(<script type="application\/json" id="bb-data">)[\s\S]*?(<\/script>)/;
-    if (!re.test(SRC)) return "unavailable";
-    const html = SKELETON + SRC.replace(re, (_, open, close) => open + blob + close) + "</body></html>";
-    try { await artifact.publish(html); return "published"; }
-    catch (e) { return (e && e.code) || "failed"; }
-  }
-
-  async function refresh(ev) {
-    const byClick = !!ev;
-    $("allow").hidden = true;
-    if (!state.sheetId) return showDemo();
-    const btn = $("refresh");
-    btn.disabled = true; btn.classList.add("spin");
-    $("status").textContent = "Pouring fresh standings…";
+  // ---------- Boot: standings are baked into the page by tools/update_data.py ----------
+  let data = null;
+  try { data = JSON.parse($("bb-data").textContent); } catch {}
+  const rows = data && Array.isArray(data.rows) ? data.rows : [];
+  if (!rows.length) {
+    render([]);
+    $("status").textContent = "No standings yet.";
+  } else {
     try {
-      const text = inClaude() ? await readViaDrive(state.sheetId) : await readViaPublicCsv(state.sheetId);
-      const data = { sheetId: state.sheetId, text, updatedAt: Date.now() };
-      show(text, data.updatedAt, "live");
-      const changed = !snapshot || snapshot.text !== text;
-      snapshot = data;
-      if (changed) saveSnapshot(text);
-      // Publishing only ever follows a tap on Refresh, never a page load.
-      if (byClick && (!BAKED || BAKED.text !== text || BAKED.sheetId !== state.sheetId)) {
-        $("status").textContent += " · Saving for everyone…";
-        const r = await bakeIntoPage(data);
-        if (r !== "published") $("status").textContent = $("status").textContent.replace(" · Saving for everyone…", r === "not_writer" || r === "not_granted" ? " · Only the organiser can update the shared standings" : "");
-      }
+      const { list, skipped, stop } = score(rows);
+      render(list);
+      const drinks = list.reduce((s, r) => s + r.drinks, 0);
+      // Latest form timestamp, shown as the sheet wrote it (event local time).
+      const hdr = rows[locateHeader(rows)].map(h => String(h).toLowerCase());
+      const iTime = hdr.findIndex(h => /time|date/.test(h));
+      const last = iTime >= 0 ? rows.slice(1).map(r => r[iTime]).filter(Boolean).pop() : "";
+      const lastTime = last ? (String(last).match(/(\d{1,2}):(\d{2})/) || []) : [];
+      const when = lastTime.length ? `${(+lastTime[1] % 12) || 12}:${lastTime[2]} ${+lastTime[1] < 12 ? "AM" : "PM"}` : "";
+      $("status").textContent = [when && `Latest drink ${when}`, isFinite(stop) && `after stop ${stop}`, `${drinks} drinks from ${list.length} riders`].filter(Boolean).join(" · ");
+      showIssues(skipped.map(esc));
     } catch (e) {
-      const msg = (e && MCP_HELP[e.code]) || (e && e.message) || "Couldn't read the sheet.";
-      if (e && NEEDS_ALLOW.includes(e.code)) $("allow").hidden = false;
-      if (snapshot && snapshot.sheetId === state.sheetId) {
-        show(snapshot.text, snapshot.updatedAt, "snap");
-        if (byClick || e.code !== "no_drive") $("status").textContent += ` · Live refresh failed: ${msg}`;
-      } else {
-        setMode("err", msg);
-      }
-    } finally {
-      btn.disabled = false; btn.classList.remove("spin");
+      render([]);
+      $("status").textContent = e.message;
     }
   }
-
-  $("refresh").addEventListener("click", refresh);
-  $("allow").addEventListener("click", async () => {
-    try {
-      const perms = await window.claude.use("permissions");
-      const st = perms ? (await perms.request(["mcp"])).mcp : "unavailable";
-      if (st === "granted") return refresh();
-      if (perms) await perms.manage().catch(() => {});
-      refresh();
-    } catch { refresh(); }
-  });
-  $("toggleConnect").addEventListener("click", () => { $("connect").hidden = !$("connect").hidden; });
-  $("sheetForm").addEventListener("submit", async (ev) => {
-    ev.preventDefault();
-    const id = sheetIdFrom($("sheetUrl").value);
-    const out = $("connectMsg");
-    if (!id) { out.className = "msg"; out.textContent = "That doesn't look like a Google Sheets link. It should contain /spreadsheets/d/…"; return; }
-    const shared = await saveSheet(id);
-    out.className = "msg ok";
-    out.textContent = shared ? "Saved for everyone who opens this page." : "Saved in this browser only. Ask the page owner to save it for everyone.";
-    refresh();
-  });
-  $("useDemo").addEventListener("click", async () => { await saveSheet(null); $("connectMsg").textContent = ""; refresh(); });
-
-  // ---------- Boot ----------
-  // 1) standings baked into the page (always available), 2) a newer shared snapshot,
-  // 3) a live read through the viewer's Google Drive, when this view has it.
-  (async () => {
-    const saved = local.get();
-    state.sheetId = saved === "demo" ? null : (saved || (BAKED && BAKED.sheetId) || DEFAULT_SHEET);
-    if (!state.sheetId) return showDemo();
-    $("sheetUrl").value = `https://docs.google.com/spreadsheets/d/${state.sheetId}/edit`;
-    if (BAKED && BAKED.sheetId === state.sheetId && typeof BAKED.text === "string") {
-      snapshot = BAKED;
-      try { show(BAKED.text, BAKED.updatedAt, "snap"); } catch { render([]); }
-    } else {
-      render([]); setMode("snap", "Loading the latest standings…");
-    }
-    if (await dbReady) {
-      try {
-        const cfg = await db.doc(SHEET_DOC).get();
-        const id = cfg.exists ? (cfg.data() || {}).sheetId : null;
-        if (id && !saved && id !== state.sheetId) { state.sheetId = id; snapshot = null; $("sheetUrl").value = `https://docs.google.com/spreadsheets/d/${id}/edit`; }
-      } catch {}
-      try {
-        const snap = await db.doc(SNAP_DOC).get();
-        const d = snap.exists ? snap.data() : null;
-        if (d && typeof d.text === "string" && d.sheetId === state.sheetId && (!snapshot || (d.updatedAt || 0) > (snapshot.updatedAt || 0))) {
-          snapshot = d;
-          show(d.text, d.updatedAt, "snap");
-        }
-      } catch {}
-    }
-    refresh();
-  })();
 })();
 </script>
