@@ -8,13 +8,13 @@ Live page: https://claude.ai/artifact/1A8iqA15we3wFGWQZywv1M (private until shar
 
 | Jersey | Award | How it's computed |
 |---|---|---|
-| Yellow (Maillot Jaune) | Most total AU | Sum of standard drinks per rider |
+| Yellow (Maillot Jaune) | Most total AU | Sum of alcohol units per rider |
 | Green (Maillot Vert) | Highest average ABV | Volume-weighted: Σ(ABV × ml) / Σ ml |
 | Polka dot (Maillot à Pois) | Toughest volume | Most total litres consumed |
 | White (Maillot Blanc) | Lowest average ABV | Volume-weighted, lowest wins |
 
-**AU (standard drinks):** 1 AU = 10 g of pure alcohol (the Australian standard drink).
-`AU = litres × ABV% × 0.789`. Example: a 375 ml can at 4.8% = 1.42 AU.
+**AU (alcohol units):** fluid ounces × ABV%.
+`AU = fl oz × ABV%`. Example: a 12 oz beer at 5% = 60 AU.
 
 ## Architecture
 

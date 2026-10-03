@@ -147,7 +147,7 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
         <div class="kicker">Le Tour de Brew · Classement général</div>
         <h1>Bike <span class="amp">&amp;</span> Brews</h1>
       </div>
-      <p>Four jerseys, one bike, one brewery. Every pour logged on the form counts toward the standings, measured in standard drinks (AU). Standings are updated by the organisers through the day.</p>
+      <p>Four jerseys, one bike, one brewery. Every pour logged on the form counts toward the standings, measured in alcohol units (AU). Standings are updated by the organisers through the day.</p>
     </div>
     <svg class="bike" viewBox="0 0 220 120" role="img" aria-label="A bicycle whose wheels are beer coasters">
       <defs>
@@ -175,7 +175,7 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
 
   <section class="gc">
     <h2>General Classification</h2>
-    <p class="sub" id="gcSub">Ranked by total standard drinks. Gaps are shown to the rider ahead in yellow.</p>
+    <p class="sub" id="gcSub">Ranked by total alcohol units. Gaps are shown to the rider ahead in yellow.</p>
     <div class="tablebox">
       <table>
         <thead><tr><th>Pos</th><th>Rider</th><th>Total AU</th><th>Drinks</th><th>Volume</th><th>Avg ABV</th></tr></thead>
@@ -187,7 +187,7 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
   <div class="issues" id="issues" role="status" hidden></div>
 
   <footer class="foot">
-    <div><strong>How AU is scored.</strong> One standard drink (AU) is 10 g of pure alcohol: litres × ABV% × 0.789. A 375 ml can at 4.8% is 1.4 AU.</div>
+    <div><strong>How AU is scored.</strong> Alcohol units (AU) are fluid ounces × ABV%. A 12 oz beer at 5% is 60 AU.</div>
     <div><strong>Jerseys.</strong> Yellow: most total AU. Green: highest average ABV. Polka dot: most total volume, the toughest climb. White: lowest average ABV. Average ABV is weighted by volume, so a pint counts more than a taster.</div>
   </footer>
 </div>
@@ -434,7 +434,7 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
 <script>
 (() => {
   "use strict";
-  const ETHANOL = 0.789; // g/ml; AU standard drink = 10 g
+  const ML_PER_OZ = 29.5735; // AU = fl oz × ABV%
   const $ = (id) => document.getElementById(id);
 
   // Find the header row  // Find the header row: the first row that has a name-like and an ABV-like column.
@@ -494,7 +494,7 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
       const ml = iVol >= 0 ? toMl(r[iVol] ?? "", headers[iVol]) : NaN;
       const abv = iAbv >= 0 ? toAbv(r[iAbv] ?? "") : NaN;
       let au = iUnits >= 0 ? parseFloat(String(r[iUnits] ?? "").replace(",", ".")) : NaN;
-      if (!isFinite(au) && isFinite(ml) && isFinite(abv)) au = (ml / 1000) * abv * ETHANOL;
+      if (!isFinite(au) && isFinite(ml) && isFinite(abv)) au = (ml / ML_PER_OZ) * abv;
       if (!isFinite(au)) {
         const bad = !isFinite(ml) ? `volume "${r[iVol] ?? ""}"` : `ABV "${r[iAbv] ?? ""}"`;
         skipped.push(`row ${sheetRow} (${name}): ${bad}`); return;
@@ -511,6 +511,7 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
 
   // ---------- Rendering ----------
   const fmt = (n, d = 1) => isFinite(n) ? n.toFixed(d) : "–";
+  const fmtAu = (n) => isFinite(n) ? String(+n.toFixed(1)) : "–";
   const fmtVol = (ml) => isFinite(ml) && ml > 0 ? (ml / 1000).toFixed(2) + " L" : "–";
   const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -522,7 +523,7 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
   };
   const JERSEYS = [
     { id: "yellow", cls: "j-yellow", title: "Maillot Jaune", rule: "Most total AU",
-      sort: (a, b) => b.au - a.au, ok: r => r.au > 0, val: r => fmt(r.au, 1) + " AU", gap: (r, l) => "+" + fmt(l.au - r.au, 1) },
+      sort: (a, b) => b.au - a.au, ok: r => r.au > 0, val: r => fmtAu(r.au) + " AU", gap: (r, l) => "+" + fmtAu(l.au - r.au) },
     { id: "green", cls: "j-green", title: "Maillot Vert", rule: "Highest average ABV",
       sort: (a, b) => b.avgAbv - a.avgAbv, ok: r => isFinite(r.avgAbv), val: r => fmt(r.avgAbv, 2) + "%", gap: (r, l) => "−" + fmt(l.avgAbv - r.avgAbv, 2) },
     { id: "polka", cls: "j-polka", title: "Maillot à Pois", rule: "Toughest volume: most litres",
@@ -553,9 +554,9 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
     $("gcBody").innerHTML = gc.length ? gc.map((r, i) => {
       const dots = [["yellow","y","Yellow jersey"],["green","g","Green jersey"],["polka","p","Polka dot jersey"],["white","w","White jersey"]]
         .filter(([k]) => leaders[k] === r.name).map(([, c, t]) => `<span class="dot ${c}" title="${t}" aria-label="${t}"></span>`).join("");
-      const gap = i === 0 ? "" : ` <span class="gap">+${fmt(gc[0].au - r.au, 1)}</span>`;
+      const gap = i === 0 ? "" : ` <span class="gap">+${fmtAu(gc[0].au - r.au)}</span>`;
       return `<tr><td class="pos">${i + 1}</td><td>${esc(r.name)}${dots ? `<span class="dots">${dots}</span>` : ""}<span class="sub-m">${r.drinks} drink${r.drinks === 1 ? "" : "s"} · ${fmtVol(r.ml)} · ${isFinite(r.avgAbv) ? fmt(r.avgAbv, 1) + "%" : "–"}</span></td>
-        <td class="au">${fmt(r.au, 1)}${gap}</td><td>${r.drinks}</td><td>${fmtVol(r.ml)}</td><td>${isFinite(r.avgAbv) ? fmt(r.avgAbv, 2) + "%" : "–"}</td></tr>`;
+        <td class="au">${fmtAu(r.au)}${gap}</td><td>${r.drinks}</td><td>${fmtVol(r.ml)}</td><td>${isFinite(r.avgAbv) ? fmt(r.avgAbv, 2) + "%" : "–"}</td></tr>`;
     }).join("") : `<tr><td colspan="6" style="display:table-cell;text-align:center;color:var(--muted);padding:24px">No drinks logged yet. The first pour takes yellow.</td></tr>`;
   }
 
