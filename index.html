@@ -1,0 +1,476 @@
+<title>Bike &amp; Brews</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<style>
+/* Layout: race-poster masthead, four jersey cards in a 2x2 peloton grid, then the General Classification table. */
+:root {
+  --bg: #e9edf0;          /* chalky tarmac */
+  --surface: #ffffff;
+  --ink: #16191d;
+  --muted: #5b6570;
+  --line: #cfd6dc;
+  --amber: #c66f12;       /* lager poured against light */
+  --foam: #fffaf0;
+  --yellow: #f2c200;      /* maillot jaune */
+  --green: #1b8a4c;       /* maillot vert */
+  --polka: #d42a2a;       /* maillot à pois */
+  --white-j: #ffffff;     /* maillot blanc */
+  --white-edge: #b9c2ca;
+  --on-yellow: #1a1500;
+  --shadow: 0 1px 0 rgba(22,25,29,.06), 0 8px 24px -14px rgba(22,25,29,.35);
+  --f-display: "Alfa Slab One", "Rockwell", "Roboto Slab", Georgia, serif;
+  --f-body: "Barlow", "Segoe UI", system-ui, sans-serif;
+  --f-data: "Barlow Condensed", "Arial Narrow", "Barlow", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121519; --surface: #1b2026; --ink: #eef1f3; --muted: #9aa5af; --line: #2c343c;
+    --amber: #f0a040; --foam: #2a2216; --yellow: #f5c800; --green: #34b36a; --polka: #ff5a52;
+    --white-j: #f4f6f8; --white-edge: #4a545d; --on-yellow: #1a1500;
+    --shadow: 0 1px 0 rgba(0,0,0,.4), 0 10px 28px -16px rgba(0,0,0,.8);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121519; --surface: #1b2026; --ink: #eef1f3; --muted: #9aa5af; --line: #2c343c;
+  --amber: #f0a040; --foam: #2a2216; --yellow: #f5c800; --green: #34b36a; --polka: #ff5a52;
+  --white-j: #f4f6f8; --white-edge: #4a545d; --on-yellow: #1a1500;
+  --shadow: 0 1px 0 rgba(0,0,0,.4), 0 10px 28px -16px rgba(0,0,0,.8);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 56px; display: grid; gap: 28px; }
+
+/* Masthead */
+.mast { display: grid; grid-template-columns: 1fr auto; gap: 16px 24px; align-items: end; }
+.mast .kicker { font-family: var(--f-data); text-transform: uppercase; letter-spacing: .14em; font-weight: 600; color: var(--amber); font-size: 13px; }
+.mast h1 { margin: 2px 0 0; font-family: var(--f-display); font-weight: 400; font-size: clamp(40px, 8vw, 76px); line-height: .95; letter-spacing: -.01em; text-wrap: balance; }
+.mast h1 .amp { color: var(--amber); }
+.mast p { margin: 10px 0 0; color: var(--muted); max-width: 58ch; }
+.bike { width: clamp(140px, 22vw, 220px); height: auto; color: var(--ink); }
+.road { height: 10px; border-radius: 2px; background:
+  repeating-linear-gradient(90deg, var(--yellow) 0 34px, transparent 34px 52px) center/100% 3px no-repeat,
+  var(--ink); }
+
+/* Toolbar */
+.bar { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
+.tap { appearance: none; border: 0; cursor: pointer; font: 600 15px/1 var(--f-body); color: var(--on-yellow);
+  background: var(--yellow); padding: 12px 18px 12px 14px; border-radius: 999px; display: inline-flex; align-items: center; gap: 10px;
+  box-shadow: inset 0 -3px 0 rgba(0,0,0,.18); }
+.tap:hover { filter: brightness(1.05); }
+.tap:focus-visible, .ghost:focus-visible, input:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+.tap[disabled] { opacity: .7; cursor: progress; }
+.tap svg { width: 20px; height: 20px; }
+.tap.spin svg { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.ghost { appearance: none; background: transparent; border: 1px solid var(--line); color: var(--ink); font: 500 14px/1 var(--f-body); padding: 10px 14px; border-radius: 999px; cursor: pointer; }
+.ghost:hover { border-color: var(--muted); }
+.status { font-family: var(--f-data); font-size: 14px; color: var(--muted); letter-spacing: .02em; }
+.pill { display: inline-block; font-family: var(--f-data); font-weight: 700; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; }
+.pill.demo { background: var(--foam); color: var(--amber); border: 1px dashed var(--amber); }
+.pill.live { background: var(--green); color: #fff; }
+.pill.err { background: var(--polka); color: #fff; }
+
+/* Connect panel */
+.connect { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 10px; }
+.connect h2 { margin: 0; font: 700 17px/1.2 var(--f-body); }
+.connect p { margin: 0; color: var(--muted); font-size: 14px; max-width: 70ch; }
+.connect form { display: flex; flex-wrap: wrap; gap: 10px; }
+.connect input { flex: 1 1 280px; min-width: 0; font: 15px var(--f-body); padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+.connect code { font-family: var(--f-data); background: var(--bg); padding: 1px 6px; border-radius: 6px; }
+.msg { font-size: 14px; color: var(--polka); }
+.msg.ok { color: var(--green); }
+
+/* Jerseys */
+.jerseys { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 720px) { .jerseys { grid-template-columns: minmax(0, 1fr); } .mast { grid-template-columns: 1fr; } .bike { justify-self: start; } }
+.jersey { background: var(--surface); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; display: grid; grid-template-rows: auto 1fr; }
+.jersey header { display: grid; grid-template-columns: 56px 1fr; gap: 14px; align-items: center; padding: 16px 18px 12px; }
+.jersey header svg { width: 56px; height: 56px; }
+.jersey .jname { font-family: var(--f-data); text-transform: uppercase; letter-spacing: .12em; font-size: 13px; font-weight: 700; color: var(--muted); }
+.jersey .rule { font-size: 14px; color: var(--muted); }
+.jersey .leader { font-family: var(--f-display); font-size: clamp(22px, 3.2vw, 28px); line-height: 1.1; margin: 2px 0; overflow-wrap: anywhere; }
+.jersey .leadval { font-family: var(--f-data); font-weight: 700; font-size: 18px; font-variant-numeric: tabular-nums; }
+.jersey ol { list-style: none; margin: 0; padding: 4px 18px 16px; display: grid; gap: 0; border-top: 1px solid var(--line); }
+.jersey li { display: grid; grid-template-columns: 26px 1fr auto; gap: 10px; align-items: baseline; padding: 8px 0; border-bottom: 1px dashed var(--line); font-variant-numeric: tabular-nums; }
+.jersey li:last-child { border-bottom: 0; }
+.jersey li .pos { font-family: var(--f-data); font-weight: 700; color: var(--muted); }
+.jersey li .who { min-width: 0; overflow-wrap: anywhere; }
+.jersey li .val { font-family: var(--f-data); font-weight: 600; font-size: 16px; }
+.jersey li .gap { color: var(--muted); font-size: 13px; margin-left: 6px; }
+.jersey .empty { padding: 14px 18px 18px; color: var(--muted); font-size: 14px; }
+.j-yellow { border-top: 6px solid var(--yellow); }
+.j-green  { border-top: 6px solid var(--green); }
+.j-polka  { border-top: 6px solid var(--polka); }
+.j-white  { border-top: 6px solid var(--white-edge); }
+.j-yellow .leadval { color: var(--amber); }
+.j-green .leadval { color: var(--green); }
+.j-polka .leadval { color: var(--polka); }
+
+/* GC table */
+.gc h2 { font-family: var(--f-display); font-weight: 400; font-size: 28px; margin: 0 0 4px; }
+.gc .sub { color: var(--muted); margin: 0 0 12px; font-size: 14px; }
+.tablebox { overflow-x: auto; background: var(--surface); border-radius: 14px; box-shadow: var(--shadow); }
+table { border-collapse: collapse; width: 100%; min-width: 620px; font-variant-numeric: tabular-nums; }
+th, td { padding: 10px 14px; text-align: right; white-space: nowrap; }
+th:nth-child(2), td:nth-child(2) { text-align: left; white-space: normal; }
+th:first-child, td:first-child { text-align: center; width: 48px; }
+thead th { font-family: var(--f-data); text-transform: uppercase; letter-spacing: .1em; font-size: 12px; color: var(--muted); font-weight: 700; border-bottom: 2px solid var(--ink); }
+tbody tr + tr td { border-top: 1px solid var(--line); }
+tbody td { font-size: 15px; }
+td.pos { font-family: var(--f-data); font-weight: 700; font-size: 17px; }
+td.au { font-family: var(--f-data); font-weight: 700; font-size: 17px; }
+td .gap { color: var(--muted); font-family: var(--f-data); }
+.dots { display: inline-flex; gap: 4px; margin-left: 8px; vertical-align: middle; }
+.dot { width: 14px; height: 14px; border-radius: 4px; display: inline-block; border: 1px solid transparent; }
+.dot.y { background: var(--yellow); } .dot.g { background: var(--green); }
+.dot.p { background: radial-gradient(circle, var(--polka) 2px, transparent 2.5px) 0 0/6px 6px, var(--white-j); border-color: var(--white-edge); }
+.dot.w { background: var(--white-j); border-color: var(--white-edge); }
+
+.foot { color: var(--muted); font-size: 13px; display: grid; gap: 6px; max-width: 78ch; }
+.foot strong { color: var(--ink); }
+@media (prefers-reduced-motion: reduce) { .tap.spin svg { animation: none; } }
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <div>
+      <div class="kicker">Le Tour de Brew · Classement général</div>
+      <h1>Bike <span class="amp">&amp;</span> Brews</h1>
+      <p>Four jerseys, one bike, one brewery. Every pour logged on the form counts toward the standings, measured in standard drinks (AU).</p>
+    </div>
+    <svg class="bike" viewBox="0 0 220 120" role="img" aria-label="A bicycle whose wheels are beer coasters">
+      <defs>
+        <pattern id="foamdots" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="4" cy="4" r="1.4" fill="currentColor" opacity=".25"/></pattern>
+      </defs>
+      <g fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="50" cy="80" r="34" fill="var(--yellow)" stroke="currentColor"/>
+        <circle cx="50" cy="80" r="24" fill="url(#foamdots)" stroke-width="2"/>
+        <circle cx="170" cy="80" r="34" fill="var(--yellow)" stroke="currentColor"/>
+        <circle cx="170" cy="80" r="24" fill="url(#foamdots)" stroke-width="2"/>
+        <path d="M50 80 L88 34 L148 34 L110 80 Z M110 80 L80 22 M148 34 L170 80 M140 18 L150 18 Q160 18 156 30 L148 34" />
+        <path d="M70 22 L92 22"/>
+      </g>
+      <circle cx="110" cy="80" r="7" fill="var(--amber)"/>
+    </svg>
+  </header>
+  <div class="road" aria-hidden="true"></div>
+
+  <div class="bar">
+    <button class="tap" id="refresh" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/><path d="M12 3v6.5M12 14.5V21M3 12h6.5M14.5 12H21M5.6 5.6l4.8 4.8M13.6 13.6l4.8 4.8M18.4 5.6l-4.8 4.8M10.4 13.6l-4.8 4.8"/></svg>
+      Refresh leaderboard
+    </button>
+    <span id="mode" class="pill demo">Example data</span>
+    <span id="status" class="status">Showing example riders until a sheet is connected.</span>
+    <button class="ghost" id="toggleConnect" type="button">Sheet settings</button>
+  </div>
+
+  <section class="connect" id="connect" hidden>
+    <h2>Connect the drinks sheet</h2>
+    <p>Paste the link to the Google Sheet your form writes to. On this page the sheet is read through your Google Drive connection, so anyone viewing needs Drive connected and access to the sheet.</p>
+    <form id="sheetForm">
+      <input id="sheetUrl" type="url" placeholder="https://docs.google.com/spreadsheets/d/…/edit" autocomplete="off" required>
+      <button class="tap" type="submit">Save sheet</button>
+      <button class="ghost" type="button" id="useDemo">Show example data</button>
+    </form>
+    <p>Columns are detected by header name: a rider name (<code>Name</code>), the volume (<code>Volume (ml)</code>, <code>oz</code> or <code>L</code>, or units written in the answer like <code>330ml</code>, <code>12oz</code>, <code>pint</code>), and <code>ABV</code>. A <code>Standard drinks</code> column, if present, is used as-is.</p>
+    <div id="connectMsg" class="msg" role="status"></div>
+  </section>
+
+  <section class="jerseys" id="jerseys" aria-label="Jersey leaders"></section>
+
+  <section class="gc">
+    <h2>General Classification</h2>
+    <p class="sub" id="gcSub">Ranked by total standard drinks. Gaps are shown to the rider ahead in yellow.</p>
+    <div class="tablebox">
+      <table>
+        <thead><tr><th>Pos</th><th>Rider</th><th>Total AU</th><th>Drinks</th><th>Volume</th><th>Avg ABV</th></tr></thead>
+        <tbody id="gcBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div><strong>How AU is scored.</strong> One standard drink (AU) is 10 g of pure alcohol: litres × ABV% × 0.789. A 375 ml can at 4.8% is 1.4 AU.</div>
+    <div><strong>Jerseys.</strong> Yellow: most total AU. Green: highest average ABV. Polka dot: most total volume, the toughest climb. White: lowest average ABV. Average ABV is weighted by volume, so a pint counts more than a taster.</div>
+  </footer>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const ETHANOL = 0.789; // g/ml; AU standard drink = 10 g
+  const SHEET_DOC = "config/sheet";
+  const $ = (id) => document.getElementById(id);
+  const state = { sheetId: null, rows: null, live: false };
+
+  // ---------- Example data (shown until a sheet is connected) ----------
+  const EXAMPLE = [
+    ["Name","Drink","Volume (ml)","ABV (%)"],
+    ["Example: Lanterne Rouge","Hazy IPA","473","6.8"],["Example: Lanterne Rouge","Pilsner","355","5.0"],["Example: Lanterne Rouge","Imperial Stout","250","10.5"],
+    ["Example: Domestique Dan","Light Lager","355","4.2"],["Example: Domestique Dan","Light Lager","355","4.2"],["Example: Domestique Dan","Shandy","568","2.5"],["Example: Domestique Dan","Light Lager","355","4.2"],
+    ["Example: Sprinter Sam","Double IPA","473","8.5"],["Example: Sprinter Sam","Barleywine","200","11.2"],
+    ["Example: Climber Cleo","Kölsch","500","4.8"],["Example: Climber Cleo","Kölsch","500","4.8"],["Example: Climber Cleo","Pale Ale","473","5.6"],["Example: Climber Cleo","Radler","500","2.5"],
+  ];
+
+  // ---------- Parsing ----------
+  function parseDelimited(text, delim) {
+    const rows = []; let row = [], field = "", q = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (q) { if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else q = false; } else field += c; }
+      else if (c === '"' && field === "") q = true;
+      else if (c === delim) { row.push(field); field = ""; }
+      else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(field); rows.push(row); row = []; field = ""; }
+      else field += c;
+    }
+    if (field !== "" || row.length) { row.push(field); rows.push(row); }
+    return rows.filter(r => r.some(x => x.trim() !== ""));
+  }
+  function parseTable(text) {
+    const lines = text.split(/\r?\n/);
+    const pipe = lines.filter(l => /^\s*\|.*\|\s*$/.test(l));
+    if (pipe.length >= 2) {
+      return pipe.filter(l => !/^\s*\|[\s:|-]+\|\s*$/.test(l))
+        .map(l => l.trim().replace(/^\||\|$/g, "").split("|").map(s => s.trim()));
+    }
+    const tabs = (text.match(/\t/g) || []).length, commas = (text.match(/,/g) || []).length;
+    return parseDelimited(text, tabs > commas / 2 ? "\t" : ",");
+  }
+  // Find the header row: the first row that has a name-like and an ABV-like column.
+  function locateHeader(rows) {
+    for (let i = 0; i < Math.min(rows.length, 15); i++) {
+      const h = rows[i].map(s => String(s).toLowerCase());
+      if (h.some(x => /abv|alcohol|%/.test(x)) && h.some(x => /name|rider|who|drinker|player/.test(x))) return i;
+    }
+    return -1;
+  }
+  function pick(headers, re, exclude) {
+    return headers.findIndex(h => re.test(h) && !(exclude && exclude.test(h)));
+  }
+  function toMl(raw, header) {
+    const s = String(raw).toLowerCase().replace(",", ".").trim();
+    if (!s) return NaN;
+    if (/pint/.test(s)) return (parseFloat(s) || 1) * 568;
+    if (/schooner/.test(s)) return (parseFloat(s) || 1) * 425;
+    if (/middy|pot\b/.test(s)) return (parseFloat(s) || 1) * 285;
+    if (/shot/.test(s)) return (parseFloat(s) || 1) * 30;
+    const n = parseFloat(s.replace(/[^0-9.]/g, ""));
+    if (!isFinite(n)) return NaN;
+    if (/oz|ounce/.test(s)) return n * 29.5735;
+    if (/ml|mls|millil/.test(s)) return n;
+    if (/cl\b/.test(s)) return n * 10;
+    if (/\bl\b|litre|liter/.test(s)) return n * 1000;
+    if (/oz|ounce/.test(header)) return n * 29.5735;
+    if (/\(l\)|litre|liter|\bl\b/.test(header)) return n * 1000;
+    if (/\bcl\b/.test(header)) return n * 10;
+    return n <= 3 ? n * 1000 : n; // bare small numbers are litres
+  }
+  function toAbv(raw) {
+    const n = parseFloat(String(raw).replace(",", ".").replace(/[^0-9.]/g, ""));
+    if (!isFinite(n)) return NaN;
+    return n > 0 && n < 1 && !/%/.test(String(raw)) ? n * 100 : n; // 0.05 → 5%
+  }
+
+  function score(rows) {
+    const hi = locateHeader(rows);
+    if (hi < 0) throw new Error("Couldn't find the header row. The sheet needs a name column and an ABV column.");
+    const headers = rows[hi].map(s => String(s).toLowerCase().trim());
+    const iName = pick(headers, /name|rider|who|drinker|player/, /drink name|beer name|brew name/);
+    const iAbv = pick(headers, /abv|alcohol %|% alcohol|alcohol/, /standard|unit/);
+    const iUnits = pick(headers, /standard drink|units|\bau\b/);
+    const iVol = pick(headers, /vol|size|ml|oz|amount|litre|liter|\(l\)|how much/, /abv|alcohol/);
+    if (iName < 0 || (iAbv < 0 && iUnits < 0)) throw new Error("Missing a name or ABV column.");
+    const riders = new Map();
+    let skipped = 0;
+    for (const r of rows.slice(hi + 1)) {
+      const name = String(r[iName] ?? "").trim();
+      if (!name) continue;
+      const key = name.toLowerCase().replace(/\s+/g, " ");
+      const ml = iVol >= 0 ? toMl(r[iVol] ?? "", headers[iVol]) : NaN;
+      const abv = iAbv >= 0 ? toAbv(r[iAbv] ?? "") : NaN;
+      let au = iUnits >= 0 ? parseFloat(String(r[iUnits] ?? "").replace(",", ".")) : NaN;
+      if (!isFinite(au) && isFinite(ml) && isFinite(abv)) au = (ml / 1000) * abv * ETHANOL;
+      if (!isFinite(au)) { skipped++; continue; }
+      const rd = riders.get(key) || { name, drinks: 0, au: 0, ml: 0, abvMl: 0 };
+      rd.drinks++; rd.au += au;
+      if (isFinite(ml)) { rd.ml += ml; if (isFinite(abv)) rd.abvMl += abv * ml; }
+      riders.set(key, rd);
+    }
+    const list = [...riders.values()].map(r => ({ ...r, avgAbv: r.ml > 0 ? r.abvMl / r.ml : NaN }));
+    return { list, skipped };
+  }
+
+  // ---------- Rendering ----------
+  const fmt = (n, d = 1) => isFinite(n) ? n.toFixed(d) : "–";
+  const fmtVol = (ml) => isFinite(ml) && ml > 0 ? (ml / 1000).toFixed(2) + " L" : "–";
+  const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  const JERSEY_SVG = {
+    yellow: `<svg viewBox="0 0 56 56" aria-hidden="true"><path d="M18 6 L28 10 L38 6 L52 16 L46 26 L40 22 L40 50 L16 50 L16 22 L10 26 L4 16 Z" fill="var(--yellow)" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/></svg>`,
+    green: `<svg viewBox="0 0 56 56" aria-hidden="true"><path d="M18 6 L28 10 L38 6 L52 16 L46 26 L40 22 L40 50 L16 50 L16 22 L10 26 L4 16 Z" fill="var(--green)" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/></svg>`,
+    polka: `<svg viewBox="0 0 56 56" aria-hidden="true"><defs><pattern id="pd" width="9" height="9" patternUnits="userSpaceOnUse"><rect width="9" height="9" fill="var(--white-j)"/><circle cx="4.5" cy="4.5" r="2.6" fill="var(--polka)"/></pattern></defs><path d="M18 6 L28 10 L38 6 L52 16 L46 26 L40 22 L40 50 L16 50 L16 22 L10 26 L4 16 Z" fill="url(#pd)" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/></svg>`,
+    white: `<svg viewBox="0 0 56 56" aria-hidden="true"><path d="M18 6 L28 10 L38 6 L52 16 L46 26 L40 22 L40 50 L16 50 L16 22 L10 26 L4 16 Z" fill="var(--white-j)" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/></svg>`,
+  };
+  const JERSEYS = [
+    { id: "yellow", cls: "j-yellow", title: "Maillot Jaune", rule: "Most total AU",
+      sort: (a, b) => b.au - a.au, ok: r => r.au > 0, val: r => fmt(r.au, 1) + " AU", gap: (r, l) => "+" + fmt(l.au - r.au, 1) },
+    { id: "green", cls: "j-green", title: "Maillot Vert", rule: "Highest average ABV",
+      sort: (a, b) => b.avgAbv - a.avgAbv, ok: r => isFinite(r.avgAbv), val: r => fmt(r.avgAbv, 2) + "%", gap: (r, l) => "−" + fmt(l.avgAbv - r.avgAbv, 2) },
+    { id: "polka", cls: "j-polka", title: "Maillot à Pois", rule: "Toughest volume: most litres",
+      sort: (a, b) => b.ml - a.ml, ok: r => r.ml > 0, val: r => fmtVol(r.ml), gap: (r, l) => "+" + ((l.ml - r.ml) / 1000).toFixed(2) },
+    { id: "white", cls: "j-white", title: "Maillot Blanc", rule: "Lowest average ABV",
+      sort: (a, b) => a.avgAbv - b.avgAbv, ok: r => isFinite(r.avgAbv), val: r => fmt(r.avgAbv, 2) + "%", gap: (r, l) => "+" + fmt(r.avgAbv - l.avgAbv, 2) },
+  ];
+
+  function render(list) {
+    const leaders = {};
+    $("jerseys").innerHTML = JERSEYS.map(j => {
+      const ranked = list.filter(j.ok).sort(j.sort);
+      const lead = ranked[0];
+      if (lead) leaders[j.id] = lead.name;
+      const rest = ranked.slice(1, 5).map((r, i) =>
+        `<li><span class="pos">${i + 2}</span><span class="who">${esc(r.name)}</span><span class="val">${j.val(r)}<span class="gap">${j.gap(r, lead)}</span></span></li>`).join("");
+      return `<article class="jersey ${j.cls}">
+        <header>${JERSEY_SVG[j.id]}<div>
+          <div class="jname">${j.title}</div>
+          <div class="leader">${lead ? esc(lead.name) : "Up for grabs"}</div>
+          <div class="leadval">${lead ? j.val(lead) : ""}</div>
+          <div class="rule">${j.rule}</div></div></header>
+        ${rest ? `<ol>${rest}</ol>` : `<div class="empty">${lead ? "No challengers yet." : "No qualifying drinks logged yet."}</div>`}
+      </article>`;
+    }).join("");
+
+    const gc = [...list].sort((a, b) => b.au - a.au);
+    $("gcBody").innerHTML = gc.length ? gc.map((r, i) => {
+      const dots = [["yellow","y","Yellow jersey"],["green","g","Green jersey"],["polka","p","Polka dot jersey"],["white","w","White jersey"]]
+        .filter(([k]) => leaders[k] === r.name).map(([, c, t]) => `<span class="dot ${c}" title="${t}" aria-label="${t}"></span>`).join("");
+      const gap = i === 0 ? "" : ` <span class="gap">+${fmt(gc[0].au - r.au, 1)}</span>`;
+      return `<tr><td class="pos">${i + 1}</td><td>${esc(r.name)}${dots ? `<span class="dots">${dots}</span>` : ""}</td>
+        <td class="au">${fmt(r.au, 1)}${gap}</td><td>${r.drinks}</td><td>${fmtVol(r.ml)}</td><td>${isFinite(r.avgAbv) ? fmt(r.avgAbv, 2) + "%" : "–"}</td></tr>`;
+    }).join("") : `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">No drinks logged yet. The first pour takes yellow.</td></tr>`;
+  }
+
+  function setMode(kind, text) {
+    const m = $("mode");
+    m.className = "pill " + kind;
+    m.textContent = kind === "live" ? "Live sheet" : kind === "err" ? "Can't read sheet" : "Example data";
+    $("status").textContent = text;
+  }
+
+  // ---------- Data sources ----------
+  function sheetIdFrom(input) {
+    const s = String(input).trim();
+    const m = s.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]{20,})/);
+    if (m) return m[1];
+    return /^[a-zA-Z0-9_-]{20,}$/.test(s) ? s : null;
+  }
+  function textFromPayload(p) {
+    if (p == null) return "";
+    if (typeof p === "string") return p;
+    if (Array.isArray(p)) return p.map(textFromPayload).join("\n");
+    if (typeof p === "object") {
+      for (const k of ["content", "text", "fileContent", "body", "data", "result"]) if (typeof p[k] === "string") return p[k];
+      const strs = Object.values(p).filter(v => typeof v === "string");
+      return strs.sort((a, b) => b.length - a.length)[0] || "";
+    }
+    return "";
+  }
+  async function readViaDrive(id) {
+    const mcp = window.claude ? await window.claude.use("mcp") : null;
+    if (!mcp) return null;
+    const res = await mcp.callTool("Google Drive", "read_file_content", { fileId: id }, { cache: { refresh: true } });
+    let text = textFromPayload(res.payload);
+    if (!text) text = (res.content || []).filter(b => b.type === "text").map(b => b.text).join("\n");
+    return text;
+  }
+  async function readViaPublicCsv(id) {
+    const r = await fetch(`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv`, { cache: "no-store" });
+    if (!r.ok) throw new Error("Sheet returned " + r.status);
+    return r.text();
+  }
+
+  const MCP_HELP = {
+    server_not_connected: "Google Drive isn't connected for you. Connect it in claude.ai Settings → Connectors, then refresh.",
+    needs_reauth: "Your Google Drive connection expired. Reconnect it in claude.ai Settings → Connectors.",
+    not_granted: "This page wasn't allowed to use Google Drive. Use the artifact's Permissions menu to allow it.",
+    consent_required: "Allow Google Drive access for this page, then refresh.",
+    tool_error: "Google Drive couldn't open that sheet. Check the link and that you have access to it.",
+    rate_limited: "Too many refreshes. Wait a minute and try again.",
+  };
+
+  async function refresh() {
+    if (!state.sheetId) { state.rows = EXAMPLE; render(score(EXAMPLE).list); setMode("demo", "Showing example riders until a sheet is connected."); return; }
+    const btn = $("refresh");
+    btn.disabled = true; btn.classList.add("spin");
+    $("status").textContent = "Pouring fresh standings…";
+    try {
+      let text = null;
+      try { text = await readViaDrive(state.sheetId); }
+      catch (e) { if (e && e.code && !["server_not_found", "capability_disabled"].includes(e.code)) throw e; }
+      if (text == null) text = await readViaPublicCsv(state.sheetId);
+      const { list, skipped } = score(parseTable(text));
+      render(list);
+      const t = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+      setMode("live", `Updated ${t} · ${list.reduce((s, r) => s + r.drinks, 0)} drinks from ${list.length} riders` + (skipped ? ` · ${skipped} rows skipped (missing volume or ABV)` : ""));
+    } catch (e) {
+      const msg = (e && MCP_HELP[e.code]) || (e && e.message) || "Couldn't read the sheet.";
+      setMode("err", msg);
+    } finally {
+      btn.disabled = false; btn.classList.remove("spin");
+    }
+  }
+
+  // ---------- Shared sheet setting (db), with a per-browser fallback ----------
+  let dbRef = null;
+  const local = {
+    get() { try { return localStorage.getItem("bb.sheet"); } catch { return null; } },
+    set(v) { try { v ? localStorage.setItem("bb.sheet", v) : localStorage.removeItem("bb.sheet"); } catch {} },
+  };
+  async function saveSheet(id) {
+    state.sheetId = id;
+    local.set(id);
+    let shared = false;
+    if (dbRef) { try { await dbRef.set({ sheetId: id || "" }); shared = true; } catch {} }
+    return shared;
+  }
+
+  $("refresh").addEventListener("click", refresh);
+  $("toggleConnect").addEventListener("click", () => { $("connect").hidden = !$("connect").hidden; });
+  $("sheetForm").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const id = sheetIdFrom($("sheetUrl").value);
+    const out = $("connectMsg");
+    if (!id) { out.className = "msg"; out.textContent = "That doesn't look like a Google Sheets link. It should contain /spreadsheets/d/…"; return; }
+    const shared = await saveSheet(id);
+    out.className = "msg ok";
+    out.textContent = shared ? "Saved for everyone who opens this page." : "Saved in this browser only. Ask the page owner to save it for everyone.";
+    refresh();
+  });
+  $("useDemo").addEventListener("click", async () => { await saveSheet(null); $("connectMsg").textContent = ""; refresh(); });
+
+  // First paint: example data, then upgrade if a sheet is configured.
+  render(score(EXAMPLE).list);
+  state.sheetId = local.get();
+  if (state.sheetId) { $("sheetUrl").value = `https://docs.google.com/spreadsheets/d/${state.sheetId}/edit`; refresh(); }
+
+  (async () => {
+    if (!window.claude || typeof window.claude.use !== "function") return;
+    const db = await window.claude.use("db");
+    if (!db) return;
+    dbRef = db.doc(SHEET_DOC);
+    try {
+      const snap = await dbRef.get();
+      const id = snap.exists ? (snap.data() || {}).sheetId : null;
+      if (id && id !== state.sheetId) {
+        state.sheetId = id;
+        $("sheetUrl").value = `https://docs.google.com/spreadsheets/d/${id}/edit`;
+        refresh();
+      }
+    } catch {}
+  })();
+})();
+</script>
