@@ -31,7 +31,6 @@ Google Form ──► Google Sheet (responses) ──► Claude reads it ──�
 - `update_data.py` accepts Drive's markdown-table export or a CSV/TSV download of the sheet, and warns if fewer rows came through than the sheet holds.
 - The page scores the rows in the browser and lists rows it couldn't count (missing name, unreadable volume or ABV) so they can be fixed in the sheet.
 - **Display names:** the [Rider Names sheet](https://docs.google.com/spreadsheets/d/10ar6o290JM09kW4Q1JN7Huq1y5BuSH5xOySc84neheQ/edit) maps each form name to a display name. The page groups riders by display name (several form names can map to one person) and shows the form name(s) under it. Form names missing from that sheet are flagged under the standings.
-- **Self-service renames (no login):** once `NAME_FORM` in `index.html` is filled in, each rider gets a **Rename** button that opens a Google Form pre-filled with their form name. Google Forms need no sign-in. The public site reads the form's responses sheet live (it must be shared "anyone with the link can view"), and each refresh bakes them in for the claude.ai copy. Later answers win over earlier ones and over the Rider Names sheet.
 - Two tabs: **Standings** (jerseys + General Classification) and **All entries** (every sheet row, newest first, with each row's AU). Link straight to the second tab with `#entries`.
 
 ## Google Form setup
