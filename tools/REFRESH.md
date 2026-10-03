@@ -10,6 +10,7 @@ connectors can't be attached to routines in this organisation, so they can't rea
 |---|---|
 | Drinks sheet | Google Drive file `1RxgUCudXWTEWxoq7LoU9xiT1dIJfdhRePCnjvECsto0` |
 | Rider Names sheet (form name → display name) | Google Drive file `10ar6o290JM09kW4Q1JN7Huq1y5BuSH5xOySc84neheQ` |
+| Display-name form responses (once set up) | the sheet id in `NAME_FORM.sheetId` in `index.html` |
 | Public leaderboard | https://xuhanwen97.github.io/BikeBrew/ (GitHub Pages, this branch) |
 | claude.ai leaderboard | https://claude.ai/artifact/1A8iqA15we3wFGWQZywv1M |
 | Control page (private) | https://claude.ai/artifact/NZxmMPfr5Bk7k5tgzqGV23 |
@@ -24,7 +25,9 @@ connectors can't be attached to routines in this organisation, so they can't rea
 3. **Save them.** Write each `fileContent` to `<scratchpad>/sheet.txt` and
    `<scratchpad>/names.txt`. Only the `Table Range` line and the markdown table matter;
    copy the table rows exactly.
-4. **Bake.** `python3 tools/update_data.py <scratchpad>/sheet.txt --names <scratchpad>/names.txt`
+   If the display-name form is set up, also read its responses sheet into `<scratchpad>/formnames.txt`.
+4. **Bake.** `python3 tools/update_data.py <scratchpad>/sheet.txt --names <scratchpad>/names.txt --names <scratchpad>/formnames.txt`
+   (drop the second `--names` if there's no form yet; later sources win).
    - Prints `UNCHANGED` (exit 3): nothing new. Skip to step 7 with the summary
      "No new drinks (N responses)".
    - Prints `WARNING ... only N came through`: Drive truncated the sheet. Don't publish

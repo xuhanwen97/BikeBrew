@@ -192,6 +192,7 @@ td .gap { color: var(--muted); font-family: var(--f-data); }
 .raw-btn { appearance: none; cursor: pointer; font: 600 12px/1 var(--f-data); letter-spacing: .08em; text-transform: uppercase;
   color: var(--amber); background: transparent; border: 1px solid var(--amber); border-radius: 999px; padding: 5px 10px; min-height: 28px; }
 .raw-btn:hover { background: var(--foam); }
+a.raw-btn.rename { text-decoration: none; display: inline-flex; align-items: center; color: var(--muted); border-color: var(--line); }
 .raw-btn[aria-expanded="true"] { background: var(--amber); color: var(--surface); }
 .raw-btn:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
 tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; white-space: normal; padding: 0 10px 14px; border-top: 0; }
@@ -723,6 +724,17 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
   const ML_PER_OZ = 29.5735; // AU = fl oz × ABV%
   const $ = (id) => document.getElementById(id);
 
+  // Self-service display names. Anyone can submit the Google Form (no sign-in needed);
+  // its responses sheet is shared "anyone with the link can view", so the public page reads
+  // it live. Fill these in from the form's pre-filled link; until then Rename stays hidden.
+  const NAME_FORM = {
+    url: "",          // https://docs.google.com/forms/d/e/<id>/viewform
+    formEntry: "",    // entry.<n> for the "Form name" question
+    sheetId: "",      // the form's responses sheet id (for live names)
+  };
+  const renameUrl = (formName) => NAME_FORM.url && NAME_FORM.formEntry
+    ? `${NAME_FORM.url}?usp=pp_url&${NAME_FORM.formEntry}=${encodeURIComponent(formName)}` : "";
+
   // Find the header row  // Find the header row: the first row that has a name-like and an ABV-like column.
   function locateHeader(rows) {
     for (let i = 0; i < Math.min(rows.length, 15); i++) {
@@ -879,7 +891,9 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
         .filter(([k]) => leaders[k] === r.name).map(([, c, t]) => `<span class="dot ${c}" title="${t}" aria-label="${t}"></span>`).join("");
       const gap = i === 0 ? "" : ` <span class="gap">+${fmtAu(gc[0].au - r.au)}</span>`;
       const rawId = "raw-" + i;
-      const btn = r.entries && r.entries.length ? `<button class="raw-btn" type="button" aria-expanded="false" aria-controls="${rawId}">Drinks</button>` : "";
+      const rn = renameUrl(r.forms[0]);
+      const btn = (r.entries && r.entries.length ? `<button class="raw-btn" type="button" aria-expanded="false" aria-controls="${rawId}">Drinks</button>` : "") +
+        (rn ? `<a class="raw-btn rename" href="${esc(rn)}" target="_blank" rel="noopener" aria-label="Change ${esc(r.name)}'s display name">Rename</a>` : "");
       return `<tr><td class="pos">${i + 1}</td><td><span class="rider">${esc(r.name)}${dots ? `<span class="dots">${dots}</span>` : ""}${btn}</span>${formLine(r)}<span class="sub-m">${r.drinks} drink${r.drinks === 1 ? "" : "s"} · ${fmtVol(r.ml)} · ${isFinite(r.avgAbv) ? fmt(r.avgAbv, 1) + "%" : "–"}</span></td>
         <td class="au">${fmtAu(r.au)}${gap}</td><td>${r.drinks}</td><td>${fmtVol(r.ml)}</td><td>${isFinite(r.avgAbv) ? fmt(r.avgAbv, 2) + "%" : "–"}</td></tr>` +
         (btn ? `<tr class="raw-row" id="${rawId}" hidden><td colspan="6">${rawTable(r, headers, iName)}</td></tr>` : "");
@@ -975,12 +989,11 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
   let data = null;
   try { data = JSON.parse($("bb-data").textContent); } catch {}
   const rows = data && Array.isArray(data.rows) ? data.rows : [];
-  if (!rows.length) {
-    render([]);
-    $("status").textContent = "No standings yet.";
-  } else {
+  const bakedNames = data && Array.isArray(data.names) ? data.names : [];
+
+  function build(names) {
+    if (!rows.length) { render([]); $("status").textContent = "No standings yet."; return; }
     try {
-      const names = Array.isArray(data.names) ? data.names : [];
       const { list, skipped, stop, headers, iName, all, unmapped } = score(rows, names);
       render(list, headers, iName);
       renderEntries(all, headers, iName);
@@ -992,12 +1005,48 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
       const lastTime = last ? (String(last).match(/(\d{1,2}):(\d{2})/) || []) : [];
       const when = lastTime.length ? `${(+lastTime[1] % 12) || 12}:${lastTime[2]} ${+lastTime[1] < 12 ? "AM" : "PM"}` : "";
       $("status").textContent = [when && `Latest drink ${when}`, isFinite(stop) && `after stop ${stop}`, `${drinks} drinks from ${list.length} riders`].filter(Boolean).join(" · ");
-      showIssues([...unmapped.map(n => `${esc(n)} isn't in the Rider Names sheet yet, so their form name is shown as their display name`), ...skipped.map(esc)]);
+      const missing = NAME_FORM.url ? "hasn't picked a display name yet, so their form name is shown" : "isn't in the Rider Names sheet yet, so their form name is shown as their display name";
+      showIssues([...unmapped.map(n => `${esc(n)} ${missing}`), ...skipped.map(esc)]);
     } catch (e) {
       render([]);
       $("status").textContent = e.message;
     }
   }
+  build(bakedNames);
+
+  // Live names from the form's responses sheet (works on the public site; the claude.ai copy
+  // can't reach Google and keeps the names baked in at the last refresh). Later answers win.
+  function parseCsv(text) {
+    const out = []; let row = [], f = "", q = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (q) { if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+      else if (c === '"') q = true;
+      else if (c === ",") { row.push(f); f = ""; }
+      else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(f); out.push(row); row = []; f = ""; }
+      else f += c;
+    }
+    if (f || row.length) { row.push(f); out.push(row); }
+    return out;
+  }
+  (async () => {
+    if (!NAME_FORM.sheetId || (window.claude && typeof window.claude.use === "function")) return;
+    try {
+      const r = await fetch(`https://docs.google.com/spreadsheets/d/${NAME_FORM.sheetId}/gviz/tq?tqx=out:csv`, { cache: "no-store" });
+      if (!r.ok) return;
+      const table = parseCsv(await r.text());
+      const h = (table[0] || []).map(c => c.toLowerCase());
+      const iF = h.findIndex(c => c.includes("form")), iD = h.findIndex(c => c.includes("display"));
+      if (iF < 0 || iD < 0) return;
+      const merged = new Map(bakedNames.map(([f, d]) => [norm(f), [f, d]]));
+      for (const row of table.slice(1)) {
+        const f = String(row[iF] || "").trim(), d = String(row[iD] || "").trim().slice(0, 40);
+        if (f && d) merged.set(norm(f), [f, d]);
+      }
+      const live = [...merged.values()];
+      if (JSON.stringify(live) !== JSON.stringify(bakedNames)) build(live);
+    } catch {}
+  })();
 })();
 </script>
 </body>

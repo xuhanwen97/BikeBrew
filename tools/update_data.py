@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """Bake the latest drinks sheet into index.html.
 
-Usage: python3 tools/update_data.py <sheet.txt> [--names <names.txt>]
+Usage: python3 tools/update_data.py <sheet.txt> [--names <names.txt>]...
 Exit code 3 (prints UNCHANGED) when the page already has exactly these rows.
 
 <sheet.txt> is the sheet's text as Google Drive exports it (a markdown table),
 or a CSV/TSV export. The rows replace the JSON inside <script id="bb-data">.
 <names.txt> is the "Bikes & Brews Rider Names" sheet (Form name -> Display name),
-in the same formats; without it the names already in the page are kept.
+in the same formats; without it the names already in the page are kept. Pass --names
+more than once (Rider Names sheet first, then the display-name form's responses):
+later files win for the same form name, and so do later rows within a file.
 """
 import csv, io, json, re, sys, time
 from pathlib import Path
@@ -50,7 +52,15 @@ def read_names(src):
     return out
 
 
-def main(src, names_src=None):
+def merge_names(sources):
+    merged = {}
+    for src in sources:
+        for form, disp in read_names(src):
+            merged[" ".join(form.lower().split())] = [form, disp[:40]]
+    return list(merged.values())
+
+
+def main(src, names_srcs=()):
     text = Path(src).read_text()
     rows = [r for r in table_rows(text) if any(c.strip() for c in r)]
     header = next((i for i, r in enumerate(rows) if any("name" in c.lower() for c in r)), None)
@@ -66,7 +76,7 @@ def main(src, names_src=None):
         old = json.loads(current[1].replace("<\\/", "</")) if current else {}
     except ValueError:
         old = {}
-    names = read_names(names_src) if names_src else old.get("names", [])
+    names = merge_names(names_srcs) if names_srcs else old.get("names", [])
     if old.get("rows") == rows and old.get("names", []) == names:
         print(f"UNCHANGED: the page already has these {len(rows) - 1} responses and {len(names)} names.")
         sys.exit(3)
@@ -84,9 +94,9 @@ if __name__ == "__main__":
     args = sys.argv[1:]
     if not args:
         sys.exit(__doc__)
-    names_src = None
-    if "--names" in args:
+    names_srcs = []
+    while "--names" in args:
         i = args.index("--names")
-        names_src = args[i + 1]
+        names_srcs.append(args[i + 1])
         del args[i:i + 2]
-    main(args[0], names_src)
+    main(args[0], names_srcs)
