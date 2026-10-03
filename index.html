@@ -940,13 +940,13 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
   });
   if (location.hash === "#entries") selectTab("entries");
 
-  // Organiser refresh: on claude.ai, the page owner gets a button that fires the routine
-  // waking the Claude session with sheet access. Absent everywhere else (e.g. GitHub Pages).
-  const REFRESH_TRIGGER = "trig_01QkWRwfwK2XVsx2ZSTWVwyT";
+  // Organiser refresh: on claude.ai, the page owner gets a button that messages the Claude
+  // session that has Google Drive access. Absent everywhere else (e.g. GitHub Pages).
+  const REFRESH_SESSION = "session_01CLEBZndnurbRn8e2YeQjTd";
   const REFRESH_HELP = {
     not_granted: "This page isn't allowed to start refreshes. Allow Claude Code Remote in the page's Permissions menu.",
     consent_required: "Allow Claude Code Remote when asked, then tap again.",
-    tool_error: "The refresh couldn't be started. Ask Claude to check the refresh routine.",
+    tool_error: "The refresh couldn't be started. The Claude session may have been archived; ask Claude to check.",
     rate_limited: "Too many requests. Wait a minute and try again.",
   };
   (async () => {
@@ -959,8 +959,8 @@ tbody tr.raw-row > td { display: table-cell; width: auto; text-align: left; whit
       btn.disabled = true;
       out.hidden = false; out.className = "refresh-note"; out.textContent = "Starting the refresh…";
       try {
-        await mcp.callTool("Claude Code Remote", "fire_trigger",
-          { trigger_id: REFRESH_TRIGGER, text: `Requested from the leaderboard at ${new Date().toLocaleTimeString()}.` }, { cache: false });
+        await mcp.callTool("Claude Code Remote", "send_message",
+          { session_id: REFRESH_SESSION, message: `Refresh the Bike & Brews leaderboard now, following tools/REFRESH.md (read both sheets, bake, publish, push, report status on the control page). Requested from the leaderboard at ${new Date().toLocaleTimeString()}.` }, { cache: false });
         out.textContent = `Refresh requested at ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}. New standings appear here in 1–3 minutes.`;
       } catch (e) {
         out.className = "refresh-note err";

@@ -103,7 +103,7 @@ dd { margin: 0; font-family: var(--f-data); font-weight: 600; font-size: 16px; o
 <script>
 (() => {
   "use strict";
-  const TRIGGER_ID = "trig_01QkWRwfwK2XVsx2ZSTWVwyT";
+  const SESSION_ID = "session_01CLEBZndnurbRn8e2YeQjTd"; // the Claude session with Google Drive access
   const $ = (id) => document.getElementById(id);
   const fmtTime = (ms) => ms ? new Date(ms).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "–";
   const state = { status: null, request: null };
@@ -127,7 +127,7 @@ dd { margin: 0; font-family: var(--f-data); font-weight: 600; font-size: 16px; o
     not_granted: "This page isn't allowed to start refreshes. Open its Permissions menu and allow Claude Code Remote.",
     consent_required: "Allow Claude Code Remote when asked, then tap again.",
     server_not_connected: "Claude Code Remote isn't available for your account here.",
-    tool_error: "The refresh couldn't be started. The routine may be turned off; ask Claude to check it.",
+    tool_error: "The refresh couldn't be started. The Claude session may have been archived; ask Claude to check.",
     rate_limited: "Too many requests. Wait a minute and tap again.",
     blocked_by_policy: "Your organisation's settings block this page from starting a refresh.",
   };
@@ -139,8 +139,8 @@ dd { margin: 0; font-family: var(--f-data); font-weight: 600; font-size: 16px; o
     note("Starting the refresh…");
     const at = Date.now();
     try {
-      await mcp.callTool("Claude Code Remote", "fire_trigger",
-        { trigger_id: TRIGGER_ID, text: `Requested from the Bike & Brews control page at ${new Date(at).toLocaleTimeString()}.` },
+      await mcp.callTool("Claude Code Remote", "send_message",
+        { session_id: SESSION_ID, message: `Refresh the Bike & Brews leaderboard now, following tools/REFRESH.md (read both sheets, bake, publish, push, report status on the control page). Requested from the control page at ${new Date(at).toLocaleTimeString()}.` },
         { cache: false });
       note("Refresh started. The status below updates when Claude finishes.", "ok");
       state.request = { at };

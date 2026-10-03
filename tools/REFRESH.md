@@ -1,8 +1,10 @@
 # Refreshing the leaderboard
 
-The procedure Claude follows when asked to refresh, either in chat or when the
-**Bike & Brews leaderboard refresh** routine (`trig_01QkWRwfwK2XVsx2ZSTWVwyT`) fires
-from the control page.
+The procedure Claude follows when asked to refresh: in chat, or when the organiser taps a
+refresh button (control page or claude.ai leaderboard). The buttons call the Claude Code
+Remote connector's `send_message` to session `session_01CLEBZndnurbRn8e2YeQjTd`, the session that has the
+Google Drive connector. (A routine can't be used: routine runs start fresh sessions, and
+connectors can't be attached to routines in this organisation, so they can't read the sheet.)
 
 | Thing | Where |
 |---|---|
