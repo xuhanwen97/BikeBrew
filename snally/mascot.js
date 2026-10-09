@@ -121,8 +121,9 @@
     g += face(100, 60, c, mega);
     if (mega) g += `<path d="M72,38 L92,45 M128,38 L108,45" fill="none" stroke="#4fc3ff" stroke-width="4" stroke-linecap="round"/>` +
       `<path d="M90,79 l3,6 l3,-5 M104,79 l3,5 l3,-6" fill="#fff" stroke="${c.line}" stroke-width="1.5" stroke-linejoin="round"/>`; // stern brow + fangs
-    if (beard) g += `<path d="M82,88 Q88,114 100,122 Q112,114 118,88 Q108,96 100,94 Q92,96 82,88 Z" fill="#eef2fa" stroke="#9aa6bf" stroke-width="2"/>` +
-      `<path d="M92,98 Q96,110 100,114 M108,98 Q104,110 100,114" stroke="#b9c3d8" stroke-width="1.5" fill="none"/>`;
+    // elder whiskers: long wise-dragon mustache curling down from the snout
+    if (beard) g += [-1, 1].map(d => `<path d="M${100 + d * 6},73 C${100 + d * 22},74 ${100 + d * 36},84 ${100 + d * 40},100 C${100 + d * 42},110 ${100 + d * 34},114 ${100 + d * 31},106" fill="none" stroke="#e9f6ff" stroke-width="4" stroke-linecap="round"/>` +
+      `<path d="M${100 + d * 6},73 C${100 + d * 22},74 ${100 + d * 36},84 ${100 + d * 40},100" fill="none" stroke="#4fc3ff" stroke-width="1.2" stroke-linecap="round" opacity=".8"/>`).join("");
     if (mega) g += `<g transform="rotate(-35 68 84)">${flame(68, 84, 1.1, c)}</g><g transform="rotate(35 132 84)">${flame(132, 84, 1.1, c)}</g>`; // Mega X jaw flames
     return g;
   }
@@ -133,7 +134,7 @@
     { name: "Hatchling", title: "Hatchling", blurb: "Still wearing its shell as a hat." },
     { name: "Whelp", title: "Whelp", blurb: "Stubby wings, big appetite, first coins." },
     { name: "Drake", title: "Drake", blurb: "Horns are in. The hoard is growing." },
-    { name: "Mega Elder", title: "Mega Elder Snallygaster", blurb: "Blue fire. Ancient beard. A mountain of gold." },
+    { name: "Mega Elder", title: "Mega Elder Snallygaster", blurb: "Blue fire. Ancient whiskers. A mountain of gold." },
   ];
 
   function draw(stage, opt = {}) {
